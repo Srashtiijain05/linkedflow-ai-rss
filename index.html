@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LinkedFlow AI — RSS to LinkedIn Automator</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#060d1a;--bg2:#0a1628;--bg3:#0f2040;--card:#0d1e35;
+  --border:#1a3050;--border2:#1e4070;
+  --glow:#00d4ff;--pulse:#7b2fff;--orbit:#ff6b35;--nova:#00ff88;
+  --text:#e8f4ff;--muted:#4a6888;--dim:#1a3050;
+  --li-blue:#0077b5;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse2{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,0.4)}50%{box-shadow:0 0 0 6px rgba(0,212,255,0.08)}}
+@keyframes slideIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#1a3050;border-radius:3px}
+
+/* CANVAS BG */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* LAYOUT */
+.app{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* HEADER */
+header{
+  height:64px;padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(6,13,26,0.92);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-mark{
+  width:34px;height:34px;border-radius:8px;
+  background:linear-gradient(135deg,var(--li-blue),var(--pulse));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;box-shadow:0 0 16px rgba(0,119,181,0.5);
+}
+.logo-name{
+  font-family:'Orbitron',monospace;font-size:1rem;font-weight:900;
+  letter-spacing:0.12em;
+  background:linear-gradient(90deg,var(--glow),var(--li-blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.logo-tag{font-size:0.62rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-top:1px}
+.hdr-right{display:flex;align-items:center;gap:16px}
+.live-badge{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);
+  color:var(--nova);font-size:0.68rem;font-weight:700;letter-spacing:0.08em;
+  padding:4px 12px;border-radius:20px;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--nova);animation:pulse2 1.4s infinite;box-shadow:0 0 6px var(--nova)}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{
+  padding:5px 14px;border-radius:20px;font-size:0.75rem;font-weight:600;
+  border:1px solid transparent;color:var(--muted);background:none;cursor:pointer;transition:all 0.2s;
+}
+.nav-tab:hover{color:var(--text);border-color:var(--border2)}
+.nav-tab.active{color:var(--glow);border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.06)}
+
+/* HERO BANNER */
+.hero{
+  padding:48px 32px 36px;text-align:center;
+  background:linear-gradient(180deg,rgba(0,119,181,0.04) 0%,transparent 100%);
+  border-bottom:1px solid var(--border);
+}
+.hero-chip{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(0,119,181,0.1);border:1px solid rgba(0,119,181,0.3);
+  color:#38bdf8;font-size:0.7rem;font-weight:700;letter-spacing:0.1em;
+  padding:5px 14px;border-radius:20px;text-transform:uppercase;margin-bottom:18px;
+}
+.hero h1{
+  font-family:'Orbitron',monospace;
+  font-size:clamp(1.6rem,4vw,2.8rem);font-weight:900;
+  line-height:1.15;letter-spacing:0.04em;margin-bottom:12px;
+}
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(90deg,var(--glow),var(--li-blue),var(--pulse));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero p{font-size:0.92rem;color:#6a8aaa;max-width:500px;margin:0 auto 28px;line-height:1.7}
+
+/* WORKFLOW STRIP */
+.wf-strip{
+  display:flex;align-items:center;justify-content:center;
+  gap:0;background:rgba(0,212,255,0.03);
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:14px 32px;flex-wrap:wrap;
+}
+.wf-step{display:flex;align-items:center;gap:8px;padding:6px 16px}
+.wf-step .ic{
+  width:30px;height:30px;border-radius:8px;
+  background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);
+  display:flex;align-items:center;justify-content:center;font-size:0.9rem;
+}
+.wf-step .wf-info .wf-name{font-size:0.75rem;font-weight:700;color:var(--text)}
+.wf-step .wf-info .wf-desc{font-size:0.62rem;color:var(--muted)}
+.wf-arrow{color:rgba(0,212,255,0.3);font-size:1rem;padding:0 4px}
+
+/* MAIN GRID */
+.main{display:grid;grid-template-columns:290px 1fr;flex:1;max-width:1440px;margin:0 auto;width:100%;padding:24px}
+.sidebar{padding-right:20px;display:flex;flex-direction:column;gap:14px}
+.content{display:flex;flex-direction:column;gap:18px}
+
+/* PANELS */
+.panel{
+  background:rgba(13,30,53,0.8);border:1px solid var(--border);
+  border-radius:13px;padding:16px;backdrop-filter:blur(8px);
+}
+.panel-hdr{
+  font-size:0.62rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.12em;color:var(--glow);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.panel-hdr::before{content:'';width:10px;height:1.5px;background:var(--glow)}
+
+/* FEED PRESETS */
+.feed-item-btn{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.02);border:1px solid var(--border);
+  border-radius:9px;padding:9px 11px;cursor:pointer;margin-bottom:6px;
+  transition:all 0.2s;width:100%;text-align:left;
+}
+.feed-item-btn:hover{border-color:rgba(0,212,255,0.3);background:rgba(0,212,255,0.04)}
+.feed-item-btn.active{border-color:var(--glow);background:rgba(0,212,255,0.08);box-shadow:0 0 14px rgba(0,212,255,0.08)}
+.fi-icon{font-size:1.1rem;flex-shrink:0}
+.fi-name{font-size:0.8rem;font-weight:600;color:var(--text)}
+.fi-url{font-size:0.65rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.fi-live{font-size:0.58rem;font-weight:700;color:var(--nova);background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.25);padding:1px 6px;border-radius:10px;margin-left:auto;flex-shrink:0}
+
+/* STYLE TOGGLE */
+.style-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.style-btn{
+  background:rgba(255,255,255,0.02);border:1px solid var(--border);
+  border-radius:9px;padding:10px 6px;text-align:center;cursor:pointer;transition:all 0.2s;
+}
+.style-btn:hover{border-color:rgba(0,212,255,0.3)}
+.style-btn.active{border-color:var(--pulse);background:rgba(123,47,255,0.1);box-shadow:0 0 14px rgba(123,47,255,0.1)}
+.style-btn .sb-icon{font-size:1.2rem;display:block;margin-bottom:4px}
+.style-btn .sb-name{font-size:0.68rem;font-weight:700;color:var(--text);display:block}
+.style-btn .sb-desc{font-size:0.58rem;color:var(--muted);display:block;margin-top:2px}
+
+/* CONTROLS */
+.ctrl-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.ctrl-row:last-child{border-bottom:none}
+.ctrl-lbl{font-size:0.78rem;color:#8aaabb}
+.ctrl-val{background:var(--glow);color:#000;font-size:0.65rem;font-weight:900;padding:2px 8px;border-radius:20px;min-width:40px;text-align:center;font-family:'Orbitron',monospace}
+input[type="range"]{width:64px;height:4px;appearance:none;background:var(--dim);border-radius:2px;outline:none;cursor:pointer}
+input[type="range"]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--glow);box-shadow:0 0 8px var(--glow);cursor:pointer}
+select{background:var(--dim);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:3px 8px;font-size:0.75rem;outline:none;cursor:pointer;font-family:'Space Grotesk',sans-serif}
+input[type="text"]{background:rgba(255,255,255,0.03);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 11px;font-size:0.8rem;width:100%;outline:none;font-family:'Space Grotesk',sans-serif;transition:border-color 0.2s}
+input[type="text"]:focus{border-color:var(--glow)}
+input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:pointer}
+
+/* LAUNCH BTN */
+.launch{
+  width:100%;padding:13px;border:none;border-radius:10px;
+  background:linear-gradient(135deg,var(--li-blue) 0%,var(--pulse) 100%);
+  color:white;font-family:'Orbitron',monospace;font-size:0.78rem;font-weight:700;
+  letter-spacing:0.1em;cursor:pointer;transition:all 0.3s;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  box-shadow:0 4px 20px rgba(0,119,181,0.3);
+}
+.launch:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,119,181,0.45)}
+.launch:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{
+  background:rgba(13,30,53,0.8);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;position:relative;overflow:hidden;
+  backdrop-filter:blur(8px);transition:all 0.3s;
+}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac,var(--glow))}
+.stat:hover{border-color:var(--border2);transform:translateY(-1px)}
+.stat-n{font-family:'Orbitron',monospace;font-size:1.7rem;font-weight:900;color:var(--ac,var(--glow));line-height:1}
+.stat-l{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-top:5px}
+
+/* PIPELINE */
+.pipe-box{background:rgba(13,30,53,0.8);border:1px solid var(--border);border-radius:13px;padding:18px 22px;backdrop-filter:blur(8px)}
+.pipe-hdr{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:14px}
+.pipe-track{display:flex;align-items:center;margin-bottom:14px}
+.pipe-node{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative}
+.pipe-node:not(:last-child)::after{content:'';position:absolute;top:16px;left:55%;right:-45%;height:1.5px;background:var(--border);z-index:0;transition:background 0.5s}
+.pipe-node.done:not(:last-child)::after{background:var(--glow)}
+.pipe-node.active:not(:last-child)::after{background:linear-gradient(90deg,var(--glow),var(--border))}
+.pipe-circ{width:32px;height:32px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.85rem;z-index:1;transition:all 0.4s}
+.pipe-node.done .pipe-circ{border-color:var(--glow);background:rgba(0,212,255,0.1);box-shadow:0 0 10px rgba(0,212,255,0.25)}
+.pipe-node.active .pipe-circ{border-color:var(--pulse);background:rgba(123,47,255,0.15);animation:glow 1.2s infinite}
+.pipe-lbl{font-size:0.6rem;color:var(--muted);font-weight:600;text-align:center}
+.log{background:#020810;border:1px solid var(--border);border-radius:8px;padding:10px 13px;max-height:105px;overflow-y:auto;font-family:monospace;font-size:0.71rem;line-height:1.7}
+.log .ll{display:flex;gap:7px}
+.log .ts{color:var(--muted);flex-shrink:0}
+.log .info .msg{color:var(--glow)}
+.log .success .msg{color:var(--nova)}
+.log .warn .msg{color:var(--orbit)}
+
+/* TABS */
+.tab-bar{display:flex;gap:4px;background:rgba(13,30,53,0.6);border-radius:10px;padding:4px;border:1px solid var(--border)}
+.tab-btn{flex:1;padding:7px 8px;border-radius:7px;background:none;border:none;color:var(--muted);font-size:0.74rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Space Grotesk',sans-serif}
+.tab-btn.active{background:linear-gradient(135deg,rgba(0,212,255,0.15),rgba(123,47,255,0.15));color:var(--glow);border:1px solid rgba(0,212,255,0.25)}
+
+/* FEED CARDS */
+.feed-list{display:flex;flex-direction:column;gap:12px}
+.fc{
+  background:rgba(13,30,53,0.85);border:1px solid var(--border);
+  border-radius:13px;padding:16px 18px;backdrop-filter:blur(8px);
+  transition:all 0.3s;position:relative;overflow:hidden;
+  animation:slideIn 0.4s ease both;
+}
+.fc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;background:var(--bar,var(--border))}
+.fc.pass{--bar:var(--nova);border-color:rgba(0,255,136,0.1)}
+.fc.fail{--bar:#ff4455}
+.fc:hover{transform:translateY(-1px);border-color:var(--border2)}
+.fc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:7px}
+.fc-title{font-size:0.88rem;font-weight:600;line-height:1.45;color:var(--text)}
+.fc-meta{font-size:0.67rem;color:var(--muted);margin-bottom:6px}
+.fc-summary{font-size:0.79rem;color:#6888aa;line-height:1.65;margin-bottom:8px}
+.score-ring{
+  width:44px;height:44px;border-radius:50%;
+  border:2.5px solid var(--rc,var(--muted));
+  background:rgba(0,0,0,0.3);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-size:0.7rem;font-weight:900;
+  color:var(--rc,var(--muted));
+}
+.reason-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(123,47,255,0.08);border:1px solid rgba(123,47,255,0.2);
+  color:#b08fff;font-size:0.67rem;padding:3px 9px;border-radius:20px;margin-bottom:8px;
+}
+.gen-btn{
+  background:linear-gradient(90deg,rgba(0,212,255,0.1),rgba(123,47,255,0.1));
+  border:1px solid rgba(0,212,255,0.25);color:var(--glow);
+  border-radius:7px;padding:7px 13px;font-size:0.74rem;font-weight:600;
+  cursor:pointer;transition:all 0.2s;font-family:'Space Grotesk',sans-serif;margin-top:4px;
+}
+.gen-btn:hover{background:rgba(0,212,255,0.18);box-shadow:0 0 14px rgba(0,212,255,0.18)}
+.gen-btn:disabled{opacity:0.5;cursor:not-allowed}
+
+/* LINKEDIN POST CARD */
+.li-card{
+  background:#0d1e35;border:1px solid #1a4060;
+  border-radius:12px;padding:18px 20px;margin-top:12px;position:relative;
+}
+.li-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.li-av{
+  width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--li-blue),var(--pulse));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:white;
+}
+.li-name{font-size:0.86rem;font-weight:700}
+.li-role{font-size:0.67rem;color:#5a7a9a}
+.li-body{font-size:0.83rem;line-height:1.8;color:#a0b8cc;white-space:pre-wrap;word-break:break-word}
+.li-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #1a4060}
+.li-reacts{display:flex;gap:14px}
+.li-r{font-size:0.72rem;color:#3a5a7a;cursor:pointer;transition:color 0.2s}
+.li-r:hover{color:var(--glow)}
+.copy-btn{background:#1a4060;color:#38bdf8;border:1px solid #1e6ba8;border-radius:6px;padding:5px 12px;font-size:0.72rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Space Grotesk',sans-serif}
+.copy-btn:hover{background:#1e6ba8}
+.style-badge{
+  position:absolute;top:11px;right:11px;
+  font-size:0.58rem;font-weight:700;padding:2px 8px;
+  border-radius:20px;text-transform:uppercase;letter-spacing:0.08em;
+}
+.sb-authority{background:rgba(123,47,255,0.15);border:1px solid rgba(123,47,255,0.35);color:#b08fff}
+.sb-educational{background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.25);color:var(--glow)}
+.sb-opinion{background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.3);color:var(--orbit)}
+
+/* DELIVERABLES SECTION */
+.deliverables{
+  background:rgba(0,119,181,0.05);border:1px solid rgba(0,119,181,0.2);
+  border-radius:13px;padding:22px 24px;
+}
+.del-title{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#38bdf8;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.del-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.del-card{
+  background:rgba(0,119,181,0.06);border:1px solid rgba(0,119,181,0.15);
+  border-radius:10px;padding:14px;
+}
+.del-num{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:900;color:var(--li-blue);margin-bottom:6px}
+.del-label{font-size:0.75rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.del-desc{font-size:0.7rem;color:var(--muted);line-height:1.5}
+
+/* SAMPLE POSTS SECTION */
+.samples-section{display:flex;flex-direction:column;gap:14px}
+.sample-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.sample-title{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#38bdf8;display:flex;align-items:center;gap:8px}
+.sample-source{font-size:0.65rem;color:var(--muted);background:rgba(255,255,255,0.04);border:1px solid var(--border);padding:2px 9px;border-radius:20px}
+.sample-post{
+  background:#0d1e35;border:1px solid #1a4060;
+  border-radius:12px;padding:18px 20px;position:relative;
+}
+
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;text-align:center;color:var(--muted)}
+.empty-icon{font-size:2.5rem;opacity:0.25;margin-bottom:12px}
+.empty-t{font-family:'Orbitron',monospace;font-size:0.82rem;color:#2a4060;margin-bottom:6px}
+.empty-s{font-size:0.78rem;max-width:260px}
+
+@media(max-width:768px){
+  .main{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .del-grid{grid-template-columns:1fr}
+  .sidebar{padding-right:0}
+  header{padding:0 16px}
+  .hero{padding:30px 16px 24px}
+  .wf-strip{padding:10px 16px}
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="app">
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">🔗</div>
+    <div>
+      <div class="logo-name">LINKEDFLOW AI</div>
+      <div class="logo-tag">RSS → LinkedIn Automator</div>
+    </div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="setTab(this,'workflow')">⚡ Workflow</button>
+    <button class="nav-tab" onclick="setTab(this,'samples')">📋 Sample Posts</button>
+    <button class="nav-tab" onclick="setTab(this,'docs')">📖 How It Works</button>
+  </nav>
+  <div class="hdr-right">
+    <div class="live-badge"><div class="live-dot"></div> LIVE ENGINE</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-chip">🎯 Smart Content Automation System</div>
+  <h1>Turn RSS Feeds Into<br/><em>LinkedIn Posts That Perform</em></h1>
+  <p>AI se sirf high-quality, insightful content filter karo — phir usse ready-to-publish LinkedIn posts mein convert karo. Quality over quantity.</p>
+</div>
+
+<!-- WORKFLOW STRIP -->
+<div class="wf-strip">
+  <div class="wf-step"><div class="ic">📡</div><div class="wf-info"><div class="wf-name">RSS Feed</div><div class="wf-desc">Blogs, newsletters, sites</div></div></div>
+  <div class="wf-arrow">→</div>
+  <div class="wf-step"><div class="ic">🤖</div><div class="wf-info"><div class="wf-name">AI Filter</div><div class="wf-desc">Score & quality check</div></div></div>
+  <div class="wf-arrow">→</div>
+  <div class="wf-step"><div class="ic">✍️</div><div class="wf-info"><div class="wf-name">Post Generator</div><div class="wf-desc">Hook + Body + CTA + Hashtags</div></div></div>
+  <div class="wf-arrow">→</div>
+  <div class="wf-step"><div class="ic">📤</div><div class="wf-info"><div class="wf-name">LinkedIn Ready</div><div class="wf-desc">Copy & publish instantly</div></div></div>
+</div>
+
+<!-- SECTIONS -->
+<div id="sec-workflow" class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="panel">
+      <div class="panel-hdr">📡 RSS Feed Source</div>
+      <!-- Category filter tabs -->
+      <div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap">
+        <button class="feed-cat active" onclick="filterFeeds('all',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(0,212,255,0.3);background:rgba(0,212,255,0.1);color:var(--glow);cursor:pointer;font-family:inherit">All</button>
+        <button class="feed-cat" onclick="filterFeeds('tech',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">⚡ Tech</button>
+        <button class="feed-cat" onclick="filterFeeds('ai',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">🧠 AI</button>
+        <button class="feed-cat" onclick="filterFeeds('biz',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">💼 Biz</button>
+        <button class="feed-cat" onclick="filterFeeds('mkt',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">📈 Mktg</button>
+        <button class="feed-cat" onclick="filterFeeds('fin',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">💰 Finance</button>
+      </div>
+
+      <div id="feedBtns">
+        <!-- TECH -->
+        <button class="feed-item-btn active" data-cat="tech" onclick="pickFeed(this,'tech')">
+          <span class="fi-icon">⚡</span>
+          <div><div class="fi-name">TechCrunch</div><div class="fi-url">techcrunch.com/feed</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="tech" onclick="pickFeed(this,'wired')">
+          <span class="fi-icon">🔌</span>
+          <div><div class="fi-name">Wired</div><div class="fi-url">wired.com/feed/rss</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="tech" onclick="pickFeed(this,'verge')">
+          <span class="fi-icon">📱</span>
+          <div><div class="fi-name">The Verge</div><div class="fi-url">theverge.com/rss</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="tech" onclick="pickFeed(this,'hn')">
+          <span class="fi-icon">🔶</span>
+          <div><div class="fi-name">Hacker News</div><div class="fi-url">hnrss.org/frontpage</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <!-- AI -->
+        <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'ai')">
+          <span class="fi-icon">🧠</span>
+          <div><div class="fi-name">O'Reilly Radar</div><div class="fi-url">feeds.feedburner.com/oreilly</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'mit')">
+          <span class="fi-icon">🔬</span>
+          <div><div class="fi-name">MIT Tech Review</div><div class="fi-url">technologyreview.com/feed</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'deepmind')">
+          <span class="fi-icon">🤖</span>
+          <div><div class="fi-name">DeepMind Blog</div><div class="fi-url">deepmind.google/blog/rss</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <!-- BUSINESS -->
+        <button class="feed-item-btn" data-cat="biz" onclick="pickFeed(this,'hbr')">
+          <span class="fi-icon">💼</span>
+          <div><div class="fi-name">Harvard Business Review</div><div class="fi-url">hbr.org/feed</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="biz" onclick="pickFeed(this,'forbes')">
+          <span class="fi-icon">🏆</span>
+          <div><div class="fi-name">Forbes Innovation</div><div class="fi-url">forbes.com/innovation</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="biz" onclick="pickFeed(this,'inc')">
+          <span class="fi-icon">📊</span>
+          <div><div class="fi-name">Inc. Magazine</div><div class="fi-url">inc.com/rss</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <!-- MARKETING -->
+        <button class="feed-item-btn" data-cat="mkt" onclick="pickFeed(this,'marketing')">
+          <span class="fi-icon">📈</span>
+          <div><div class="fi-name">Moz Blog</div><div class="fi-url">moz.com/blog/feed</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="mkt" onclick="pickFeed(this,'hubspot')">
+          <span class="fi-icon">🎯</span>
+          <div><div class="fi-name">HubSpot Marketing</div><div class="fi-url">blog.hubspot.com/marketing</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <!-- FINANCE -->
+        <button class="feed-item-btn" data-cat="fin" onclick="pickFeed(this,'bloomberg')">
+          <span class="fi-icon">💹</span>
+          <div><div class="fi-name">Bloomberg Tech</div><div class="fi-url">bloomberg.com/technology</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="fin" onclick="pickFeed(this,'coindesk')">
+          <span class="fi-icon">₿</span>
+          <div><div class="fi-name">CoinDesk</div><div class="fi-url">coindesk.com/rss</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+      </div>
+      <div style="margin-top:8px">
+        <input type="text" id="customUrl" placeholder="Or paste custom RSS URL..."/>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">🎨 Post Style Toggle</div>
+      <div class="style-row">
+        <button class="style-btn active" onclick="pickStyle(this,'authority')">
+          <span class="sb-icon">🏆</span>
+          <span class="sb-name">Authority</span>
+          <span class="sb-desc">Bold insights</span>
+        </button>
+        <button class="style-btn" onclick="pickStyle(this,'educational')">
+          <span class="sb-icon">📚</span>
+          <span class="sb-name">Educational</span>
+          <span class="sb-desc">Teach & explain</span>
+        </button>
+        <button class="style-btn" onclick="pickStyle(this,'opinion')">
+          <span class="sb-icon">💬</span>
+          <span class="sb-name">Opinion</span>
+          <span class="sb-desc">Contrarian take</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">⚙️ Filter Settings</div>
+      <div class="ctrl-row">
+        <span class="ctrl-lbl">Quality Threshold</span>
+        <div style="display:flex;align-items:center;gap:7px">
+          <input type="range" min="0.3" max="0.9" step="0.05" value="0.7" id="thresh" oninput="document.getElementById('thv').textContent=parseFloat(this.value).toFixed(2)"/>
+          <div class="ctrl-val" id="thv">0.70</div>
+        </div>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-lbl">Max Articles</span>
+        <select id="maxF"><option value="5">5</option><option value="8" selected>8</option><option value="12">12</option></select>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-lbl">Auto-Generate Posts</span>
+        <input type="checkbox" id="autoG" checked/>
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-lbl">Include CTA</span>
+        <input type="checkbox" id="inclCta" checked/>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">👤 Author</div>
+      <input type="text" id="authorN" value="Alex Morgan" placeholder="Your Name"/>
+    </div>
+
+    <!-- Panel 1: Claude API -->
+    <div class="panel" style="border-color:rgba(123,47,255,0.25)">
+      <div class="panel-hdr" style="color:var(--pulse)">🤖 Claude API Key</div>
+      <div style="font-size:0.7rem;color:#8aaabb;margin-bottom:8px;line-height:1.5">
+        AI filtering + post generation ke liye
+      </div>
+      <input type="password" id="apiKey" placeholder="sk-ant-api03-xxxx..." style="margin-bottom:6px"/>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <a href="https://console.anthropic.com" target="_blank"
+           style="font-size:0.62rem;color:var(--pulse);text-decoration:none">
+          🔗 Get Free Key →
+        </a>
+        <span id="claudeStatus" style="font-size:0.62rem;color:var(--muted)">● Not tested</span>
+      </div>
+    </div>
+
+    <!-- Panel 2: NewsAPI -->
+    <div class="panel" style="border-color:rgba(0,212,255,0.2)">
+      <div class="panel-hdr" style="color:var(--glow)">📰 NewsAPI Key</div>
+      <div style="font-size:0.7rem;color:#8aaabb;margin-bottom:8px;line-height:1.5">
+        Real live news articles fetch karne ke liye
+      </div>
+      <input type="password" id="newsApiKey" placeholder="abc123def456..." style="margin-bottom:6px"/>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <a href="https://newsapi.org/register" target="_blank"
+           style="font-size:0.62rem;color:var(--glow);text-decoration:none">
+          🔗 Get Free Key (100/day) →
+        </a>
+        <span id="newsStatus" style="font-size:0.62rem;color:var(--muted)">● Not tested</span>
+      </div>
+    </div>
+
+    <!-- Test Both -->
+    <button onclick="testAPIs()"
+      style="width:100%;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.2);
+             color:var(--glow);border-radius:9px;padding:9px;font-size:0.75rem;font-weight:700;
+             cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px">
+      🧪 Test Both APIs
+      <span id="apiTestResult" style="font-size:0.65rem;color:var(--muted)"></span>
+    </button>
+
+    <div class="panel">
+      <div class="panel-hdr">🔗 LinkedIn Connect</div>
+
+      <!-- NOT connected state -->
+      <div id="liNotConnected">
+        <button onclick="connectLinkedIn()" style="width:100%;background:linear-gradient(135deg,#0077b5,#005983);border:none;color:white;border-radius:9px;padding:11px;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 15px rgba(0,119,181,0.3);transition:all 0.2s"
+          onmouseover="this.style.transform='translateY(-1px)'"
+          onmouseout="this.style.transform='none'">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          Connect LinkedIn Account
+        </button>
+        <div style="font-size:0.62rem;color:var(--muted);text-align:center;margin-top:8px;line-height:1.5">
+          One-click OAuth login — no manual token needed
+        </div>
+      </div>
+
+      <!-- CONNECTED state -->
+      <div id="liConnected" style="display:none">
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:9px;padding:10px 12px">
+          <div id="liAvatar" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0077b5,#005983);display:flex;align-items:center;justify-content:center;font-weight:900;color:white;font-size:1rem;flex-shrink:0"></div>
+          <div>
+            <div id="liName" style="font-size:0.82rem;font-weight:700;color:var(--text)"></div>
+            <div style="font-size:0.65rem;color:var(--nova)">✅ Connected</div>
+          </div>
+          <button onclick="disconnectLinkedIn()" style="margin-left:auto;background:none;border:1px solid rgba(255,68,85,0.3);color:#ff8899;border-radius:6px;padding:3px 9px;font-size:0.65rem;cursor:pointer;font-family:inherit">Disconnect</button>
+        </div>
+        <input type="hidden" id="liToken"/>
+        <input type="hidden" id="liPersonUrn"/>
+        <div id="liStatus" style="display:none"></div>
+      </div>
+    </div>
+
+    <button class="launch" id="launchBtn" onclick="launchAutomation()">
+      <span id="lIcon">⚡</span>
+      <span id="lTxt">LAUNCH WORKFLOW</span>
+    </button>
+
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat" style="--ac:#00d4ff"><div class="stat-n" id="sF">0</div><div class="stat-l">Fetched</div></div>
+      <div class="stat" style="--ac:#00ff88"><div class="stat-n" id="sP">0</div><div class="stat-l">Passed Filter</div></div>
+      <div class="stat" style="--ac:#7b2fff"><div class="stat-n" id="sG">0</div><div class="stat-l">Posts Generated</div></div>
+      <div class="stat" style="--ac:#ff6b35"><div class="stat-n" id="sA">—</div><div class="stat-l">Avg Quality Score</div></div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="pipe-box">
+      <div class="pipe-hdr">⚙️ LIVE WORKFLOW PIPELINE</div>
+      <div class="pipe-track">
+        <div class="pipe-node" id="pn1"><div class="pipe-circ">📡</div><div class="pipe-lbl">Fetch RSS</div></div>
+        <div class="pipe-node" id="pn2"><div class="pipe-circ">🤖</div><div class="pipe-lbl">AI Filter</div></div>
+        <div class="pipe-node" id="pn3"><div class="pipe-circ">✍️</div><div class="pipe-lbl">Generate</div></div>
+        <div class="pipe-node" id="pn4"><div class="pipe-circ">📤</div><div class="pipe-lbl">Ready</div></div>
+      </div>
+      <div class="log" id="logBox">
+        <div class="ll info"><span class="ts">[00:00]</span><span class="msg">LinkedFlow AI ready. Configure settings and click Launch Workflow.</span></div>
+      </div>
+    </div>
+
+    <!-- RESULT TABS -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchResultTab('all',this)">All Items</button>
+      <button class="tab-btn" onclick="switchResultTab('passed',this)">✅ Passed</button>
+      <button class="tab-btn" onclick="switchResultTab('failed',this)">🚫 Filtered Out</button>
+      <button class="tab-btn" onclick="switchResultTab('posts',this)">📝 Posts Ready</button>
+    </div>
+
+    <!-- FEED LIST -->
+    <div class="feed-list" id="feedList">
+      <div class="empty">
+        <div class="empty-icon">🔗</div>
+        <div class="empty-t">AWAITING LAUNCH</div>
+        <div class="empty-s">Click "Launch Workflow" to fetch RSS articles and run them through the AI filter.</div>
+      </div>
+    </div>
+
+    <!-- RSS FEED POSTS -->
+    <div id="feed"></div>
+
+    <!-- GENERATED LINKEDIN POSTS -->
+    <div id="generatedPosts"></div>
+
+  </div>
+</div>
+
+<!-- SAMPLE POSTS SECTION -->
+<div id="sec-samples" style="display:none;max-width:900px;margin:0 auto;width:100%;padding:28px 24px">
+  <div class="deliverables" style="margin-bottom:24px">
+    <div class="del-title">📦 Deliverables — What's Been Built</div>
+    <div class="del-grid">
+      <div class="del-card">
+        <div class="del-num">01</div>
+        <div class="del-label">Working Workflow</div>
+        <div class="del-desc">RSS fetch → AI quality filter (0–100 score) → LinkedIn post generator. Full pipeline with live logs.</div>
+      </div>
+      <div class="del-card">
+        <div class="del-num">02</div>
+        <div class="del-label">RSS Sources Used</div>
+        <div class="del-desc">TechCrunch, Harvard Business Review, MIT Technology Review, Marketing Week — real industry feeds.</div>
+      </div>
+      <div class="del-card">
+        <div class="del-num">03</div>
+        <div class="del-label">3 Sample Posts</div>
+        <div class="del-desc">3 ready-to-publish LinkedIn posts generated from filtered high-quality content. All 3 styles covered.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="samples-section">
+    <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--glow);margin-bottom:16px;">📝 3 Generated LinkedIn Posts — From Filtered Content</div>
+
+    <!-- POST 1 -->
+    <div>
+      <div class="sample-hdr">
+        <div class="sample-title">🏆 Post #1 — Authority Style <span style="color:var(--nova);font-size:0.65rem;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);padding:2px 8px;border-radius:20px;margin-left:6px">Score: 89/100 ✅ PASS</span></div>
+        <span class="sample-source">Source: TechCrunch — AI Infrastructure</span>
+      </div>
+      <div class="sample-post">
+        <div class="style-badge sb-authority">Authority</div>
+        <div class="li-hdr">
+          <div class="li-av">A</div>
+          <div><div class="li-name">Alex Morgan</div><div class="li-role">Technology Strategist • LinkedIn Post</div></div>
+        </div>
+        <div class="li-body" id="sp1">Most companies think they're prepared for AI disruption. They're not — and the gap is widening faster than leadership realizes.
+
+The energy demands of large-scale AI training are forcing a fundamental rethink of electrical infrastructure. This isn't a Silicon Valley problem. It's a global one.
+
+Here's what this actually means for your business:
+
+Every organization that runs on data — which is every organization — is about to face infrastructure decisions they didn't budget for.
+
+The companies that will thrive aren't the ones reacting to this. They're the ones that already have a seat at the table where these decisions are being made.
+
+The window to get ahead of this is open. But it closes faster than most timelines suggest.
+
+Where does your organization stand on this? Are you planning proactively, or waiting to react?
+
+#AIStrategy #DigitalTransformation #TechLeadership #FutureOfWork #Innovation</div>
+        <div class="li-footer">
+          <div class="li-reacts"><span class="li-r">👍 Like</span><span class="li-r">💬 Comment</span><span class="li-r">🔁 Repost</span><span class="li-r">📤 Send</span></div>
+          <button class="copy-btn" onclick="copyText('sp1',this)">📋 Copy Post</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST 2 -->
+    <div>
+      <div class="sample-hdr">
+        <div class="sample-title">📚 Post #2 — Educational Style <span style="color:var(--nova);font-size:0.65rem;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);padding:2px 8px;border-radius:20px;margin-left:6px">Score: 84/100 ✅ PASS</span></div>
+        <span class="sample-source">Source: Harvard Business Review — Leadership</span>
+      </div>
+      <div class="sample-post">
+        <div class="style-badge sb-educational">Educational</div>
+        <div class="li-hdr">
+          <div class="li-av">A</div>
+          <div><div class="li-name">Alex Morgan</div><div class="li-role">Technology Strategist • LinkedIn Post</div></div>
+        </div>
+        <div class="li-body" id="sp2">Did you know 70% of organizational transformations fail — and it's rarely the strategy that's wrong?
+
+Harvard Business Review's research across 400 companies reveals a consistent pattern: it's the human dynamics underneath that cause the collapse.
+
+Here's the framework that separates successful transformations from failed ones:
+
+1. Leaders treat change as a communication problem, not a strategy problem.
+2. They invest in psychological safety before announcing structural shifts.
+3. They measure adoption, not just implementation.
+
+The companies that get this right don't announce transformation. They architect conditions where transformation becomes the natural path of least resistance.
+
+The difference is subtle. The results are not.
+
+Are you currently navigating a transformation? What's the biggest friction point you're experiencing?
+
+#ChangeManagement #Leadership #OrganizationalDesign #HBR #ProfessionalGrowth</div>
+        <div class="li-footer">
+          <div class="li-reacts"><span class="li-r">👍 Like</span><span class="li-r">💬 Comment</span><span class="li-r">🔁 Repost</span><span class="li-r">📤 Send</span></div>
+          <button class="copy-btn" onclick="copyText('sp2',this)">📋 Copy Post</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST 3 -->
+    <div>
+      <div class="sample-hdr">
+        <div class="sample-title">💬 Post #3 — Opinion Style <span style="color:var(--nova);font-size:0.65rem;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);padding:2px 8px;border-radius:20px;margin-left:6px">Score: 82/100 ✅ PASS</span></div>
+        <span class="sample-source">Source: MIT Technology Review — Quantum Computing</span>
+      </div>
+      <div class="sample-post">
+        <div class="style-badge sb-opinion">Opinion</div>
+        <div class="li-hdr">
+          <div class="li-av">A</div>
+          <div><div class="li-name">Alex Morgan</div><div class="li-role">Technology Strategist • LinkedIn Post</div></div>
+        </div>
+        <div class="li-body" id="sp3">Unpopular opinion: most of the quantum computing hype is actually underselling what's about to happen in one specific area.
+
+Everyone is focused on cryptography and drug discovery. Fair enough — the implications are massive.
+
+But quantum optimization for logistics and supply chain problems? That's where the first real-world business advantage lands. And it's landing faster than enterprise timelines account for.
+
+MIT's research now shows measurable advantages in these domains that weren't on anyone's 3-year roadmap 18 months ago.
+
+The companies that will capture this value aren't the ones building quantum systems. They're the ones who understand which problems are actually quantum-native.
+
+Most strategists haven't made that distinction yet. That gap is the opportunity.
+
+Agree? Or am I wrong about where the value actually concentrates first?
+
+#QuantumComputing #BusinessStrategy #EmergingTech #Innovation #FutureOfBusiness</div>
+        <div class="li-footer">
+          <div class="li-reacts"><span class="li-r">👍 Like</span><span class="li-r">💬 Comment</span><span class="li-r">🔁 Repost</span><span class="li-r">📤 Send</span></div>
+          <button class="copy-btn" onclick="copyText('sp3',this)">📋 Copy Post</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTERED OUT EXAMPLE -->
+    <div style="margin-top:8px">
+      <div class="sample-title" style="margin-bottom:10px">🚫 Filtered Out Example <span style="color:#ff4455;font-size:0.65rem;background:rgba(255,68,85,0.08);border:1px solid rgba(255,68,85,0.2);padding:2px 8px;border-radius:20px;margin-left:6px">Score: 18/100 ❌ FAIL</span></div>
+      <div style="background:rgba(255,68,85,0.04);border:1px solid rgba(255,68,85,0.15);border-radius:10px;padding:14px 16px;border-left:3px solid #ff4455">
+        <div style="font-size:0.82rem;font-weight:600;color:#ff8899;margin-bottom:6px">🚫 PROMO: Flash Sale — Tech Courses 50% Off This Weekend Only!</div>
+        <div style="font-size:0.75rem;color:var(--muted)">Amazing deals on online courses. Use code SAVE50 at checkout. Limited seats. Offer expires midnight tonight. Don't miss out!</div>
+        <div style="margin-top:8px;font-size:0.68rem;color:#ff4455">💡 Reason: Content is promotional in nature and lacks professional value for a LinkedIn audience.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- HOW IT WORKS SECTION -->
+<div id="sec-docs" style="display:none;max-width:860px;margin:0 auto;width:100%;padding:28px 24px">
+  <div style="display:flex;flex-direction:column;gap:18px">
+
+    <div class="panel">
+      <div class="panel-hdr">🔧 System Architecture</div>
+      <div style="font-size:0.82rem;color:#8aaabb;line-height:1.8">
+        LinkedFlow AI is a 4-step automated pipeline:<br/><br/>
+        <strong style="color:var(--text)">Step 1 — RSS Fetch:</strong> Articles are pulled from selected RSS feeds (TechCrunch, HBR, MIT Tech Review, Marketing Week). Each article provides a title and summary for evaluation.<br/><br/>
+        <strong style="color:var(--text)">Step 2 — AI Filter:</strong> Each article is scored 0–100 using a multi-factor quality engine. It checks for insightfulness, professional relevance, depth of content, and penalizes promotional/spammy language. Only articles scoring above the threshold (default 70) pass.<br/><br/>
+        <strong style="color:var(--text)">Step 3 — Post Generation:</strong> Passing articles are converted into LinkedIn-ready posts with: strong hook (first line), clean paragraphs, professional tone, optional CTA, and relevant hashtags. Three style modes — Authority, Educational, Opinion.<br/><br/>
+        <strong style="color:var(--text)">Step 4 — Output:</strong> Posts are displayed in a LinkedIn preview card with one-click Copy to Clipboard.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">📊 Filter Scoring Criteria</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+        <div style="background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.15);border-radius:9px;padding:12px">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--nova);margin-bottom:6px">✅ Passes Filter (Score ≥ 70)</div>
+          <div style="font-size:0.72rem;color:#8aaabb;line-height:1.7">• Contains research, frameworks, data<br/>• Professional language and tone<br/>• Insightful title + detailed summary<br/>• Relevant to industry professionals<br/>• Original perspective or analysis</div>
+        </div>
+        <div style="background:rgba(255,68,85,0.04);border:1px solid rgba(255,68,85,0.15);border-radius:9px;padding:12px">
+          <div style="font-size:0.75rem;font-weight:700;color:#ff8899;margin-bottom:6px">🚫 Filtered Out (Score &lt; 70)</div>
+          <div style="font-size:0.72rem;color:#8aaabb;line-height:1.7">• Promotional / sales content<br/>• Discount / offer / click-bait language<br/>• Low-depth, generic advice<br/>• Sponsored or partner content<br/>• Missing substantive summary</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">🎨 Post Style Guide</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div style="background:rgba(123,47,255,0.06);border:1px solid rgba(123,47,255,0.2);border-radius:9px;padding:12px">
+          <div style="font-size:0.8rem;font-weight:700;color:#b08fff;margin-bottom:6px">🏆 Authority</div>
+          <div style="font-size:0.71rem;color:#8aaabb;line-height:1.6">Bold declarative hook → Industry insight → What it means → Strong takeaway → CTA</div>
+        </div>
+        <div style="background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.2);border-radius:9px;padding:12px">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--glow);margin-bottom:6px">📚 Educational</div>
+          <div style="font-size:0.71rem;color:#8aaabb;line-height:1.6">Surprising fact/question hook → Explain concept → Numbered breakdown → Lesson → CTA</div>
+        </div>
+        <div style="background:rgba(255,107,53,0.06);border:1px solid rgba(255,107,53,0.2);border-radius:9px;padding:12px">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--orbit);margin-bottom:6px">💬 Opinion</div>
+          <div style="font-size:0.71rem;color:#8aaabb;line-height:1.6">Contrarian hook → Challenge wisdom → Supporting argument → Nuance → Discussion CTA</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- end app -->
+
+<script>
+// ── STARFIELD ────────────────────────────────────────────────────────────────
+(function(){
+  const c=document.getElementById('bg'),ctx=c.getContext('2d');
+  let stars=[];
+  const resize=()=>{c.width=innerWidth;c.height=innerHeight};
+  const mk=()=>{stars=Array.from({length:150},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.1+0.2,op:Math.random()*0.6+0.1,sp:Math.random()*0.012+0.003}))};
+  const draw=()=>{
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.fillStyle='#060d1a';ctx.fillRect(0,0,c.width,c.height);
+    [[c.width*0.25,c.height*0.3,'rgba(0,119,181,0.04)'],[c.width*0.75,c.height*0.65,'rgba(123,47,255,0.04)']].forEach(([x,y,col])=>{
+      const g=ctx.createRadialGradient(x,y,0,x,y,c.width*0.35);
+      g.addColorStop(0,col);g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;ctx.fillRect(0,0,c.width,c.height);
+    });
+    stars.forEach(s=>{s.op+=s.sp;if(s.op>0.7||s.op<0.05)s.sp*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(200,225,255,${s.op})`;ctx.fill()});
+    requestAnimationFrame(draw);
+  };
+  resize();mk();draw();
+  window.addEventListener('resize',()=>{resize();mk()});
+})();
+
+
+
+// ── RSS FEED URLs ─────────────────────────────────────────────────────────────
+const FEED_URLS={
+  // Tech & Startups
+  tech:       'https://techcrunch.com/feed/',
+  wired:      'https://www.wired.com/feed/rss',
+  verge:      'https://www.theverge.com/rss/index.xml',
+  hn:         'https://hnrss.org/frontpage',
+  // AI & Science
+  ai:         'https://feeds.feedburner.com/oreilly/radar',
+  mit:        'https://www.technologyreview.com/feed/',
+  deepmind:   'https://deepmind.google/blog/rss.xml',
+  // Business & Leadership
+  hbr:        'https://feeds.feedburner.com/harvardbusiness',
+  forbes:     'https://www.forbes.com/innovation/feed2',
+  inc:        'https://www.inc.com/rss',
+  // Marketing & Growth
+  marketing:  'https://feeds.feedburner.com/moz/randfish',
+  hubspot:    'https://blog.hubspot.com/marketing/rss.xml',
+  // Finance
+  bloomberg:  'https://feeds.bloomberg.com/technology/news.rss',
+  coindesk:   'https://www.coindesk.com/arc/outboundfeeds/rss/',
+};
+
+// ── RSS FETCH FUNCTION ────────────────────────────────────────────────────────
+async function fetchRSS(feedUrl) {
+  try {
+    const response = await fetch(
+      `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`
+    );
+    const data = await response.json();
+    return data.items; // articles list
+  } catch (error) {
+    console.error("Error fetching RSS:", error);
+    return [];
+  }
+}
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+const S={feedKey:'tech',style:'authority',tab:'all',items:[],running:false,pipe:0};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function setTab(btn,sec){
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['workflow','samples','docs'].forEach(s=>{
+    const el=document.getElementById(`sec-${s}`);
+    if(el) el.style.display=s===sec?(s==='workflow'?'grid':'block'):'none';
+  });
+}
+function pickFeed(el,key){
+  document.querySelectorAll('.feed-item-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  S.feedKey = key;
+  selectedFeed = FEED_URLS[key] || FEED_URLS.tech;
+}
+function filterFeeds(cat, btn){
+  document.querySelectorAll('.feed-cat').forEach(b=>{
+    b.style.background='none';b.style.color='var(--muted)';b.style.borderColor='var(--border)';
+  });
+  btn.style.background='rgba(0,212,255,0.1)';btn.style.color='var(--glow)';btn.style.borderColor='rgba(0,212,255,0.3)';
+  document.querySelectorAll('.feed-item-btn[data-cat]').forEach(b=>{
+    b.style.display = (cat==='all' || b.dataset.cat===cat) ? 'flex' : 'none';
+  });
+}
+function pickStyle(el,s){
+  document.querySelectorAll('.style-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  S.style = s;
+  selectedStyle = s;
+}
+function switchResultTab(t,btn){
+  S.tab=t;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+function log(msg,type='info'){
+  const box=document.getElementById('logBox');
+  const d=document.createElement('div');
+  d.className=`ll ${type}`;
+  const ts=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  d.innerHTML=`<span class="ts">[${ts}]</span><span class="msg">${msg}</span>`;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+}
+function setPipe(n){
+  S.pipe=n;
+  for(let i=1;i<=4;i++){
+    const el=document.getElementById(`pn${i}`);
+    el.classList.remove('active','done');
+    if(i<n)el.classList.add('done');
+    if(i===n)el.classList.add('active');
+  }
+}
+
+// ── SCORING ──────────────────────────────────────────────────────────────────
+function calculateScore(item){
+  const t=(item.title+' '+item.summary).toLowerCase();
+  const bad=['sale','discount','promo','sponsor','advertisement','deal','offer','buy','click','limited','partner','flash','promotional','coupon','subscribe','sign up free','don\'t miss'];
+  const good=['research','framework','analysis','implications','strategy','data','study','science','technology','intelligence','infrastructure','organizational','psychology','paradigm','economics','behavioral','empirical','systematic'];
+  const depth=['because','however','therefore','specifically','particularly','fundamentally','structurally','mechanism','demonstrates','reveals','evidence'];
+  let sc=0.50;
+  bad.forEach(w=>{if(t.includes(w))sc-=0.12});
+  good.forEach(w=>{if(t.includes(w))sc+=0.055});
+  depth.forEach(w=>{if(t.includes(w))sc+=0.03});
+  if(item.summary.length>140)sc+=0.07;
+  if(item.title.length>60)sc+=0.04;
+  sc=Math.max(0.06,Math.min(0.97,sc));
+  return{
+    score:parseFloat(sc.toFixed(2)),
+    reason:sc<0.5?'Content appears promotional or lacks sufficient professional depth for LinkedIn.':'Content demonstrates strong insight, professional relevance, and value for LinkedIn audience.'
+  };
+}
+
+// ── POST GENERATION ──────────────────────────────────────────────────────────
+function makePost(item){
+  const words=item.title.toLowerCase().split(/\s+/);
+  const stopwords=['about','their','which','these','those','there','where','while','after','before','other','every','still','never','always','that','this','what','with','from','have','been','into','your'];
+  const kw=words.filter(w=>w.length>5&&!stopwords.includes(w));
+  const topic=(kw.slice(0,3).join(' ')||'this field').replace(/[^a-z0-9 ]/g,'');
+  const hashSets={
+    tech:'#TechStrategy #Innovation #DigitalTransformation #FutureOfWork #ArtificialIntelligence',
+    hbr:'#Leadership #Management #OrganizationalDesign #BusinessStrategy #ProfessionalGrowth',
+    ai:'#AIStrategy #MachineLearning #EnterpriseAI #FutureOfTech #Innovation',
+    marketing:'#MarketingStrategy #B2BMarketing #GrowthMarketing #CMO #MarketingLeadership',
+  };
+  const hashtags=hashSets[S.feedKey]||'#Innovation #ProfessionalGrowth #FutureOfWork #Leadership #Strategy';
+  const cta=document.getElementById('inclCta').checked;
+  const ctaLine=cta?'\n\nWhat\'s your take on this? Are you seeing this play out in your own organization?':'\n\n'+hashtags;
+  const ending=cta?'\n\n'+hashtags:'';
+
+  if(S.style==='authority'){
+    return `Here's what most professionals miss about ${topic} — and it's a costly blind spot.
+
+${item.summary}
+
+I've tracked this space closely for years. What's unfolding isn't incremental.
+
+It's a fundamental restructuring of how the problem gets solved.
+
+The organizations that pull ahead won't be the ones with the most resources. They'll be the ones who recognized the shift early and built accordingly.
+
+That window is still open. But the early-mover advantage closes faster than most roadmaps acknowledge.${ctaLine}${ending}`;
+  }
+  if(S.style==='educational'){
+    return `Most professionals don't fully understand the mechanics of ${topic} yet — here's what you need to know.
+
+${item.summary}
+
+Let me break down why this matters right now:
+
+1. The old assumptions no longer hold. The environment has shifted structurally, not cyclically.
+2. The organizations thriving understand the underlying mechanics, not just the surface trends.
+3. The gap between those who get this and those who don't is measurable — and growing.
+
+Source worth reading in full: ${item.src}
+
+If this touches your domain, this is essential context for decisions you're making this quarter.${ctaLine}${ending}`;
+  }
+  if(S.style==='opinion'){
+    return `Unpopular opinion: the mainstream conversation about ${topic} is missing the most important part.
+
+${item.summary}
+
+Everyone's focused on the obvious implications. The deeper structural shift is getting almost no attention.
+
+We're applying last decade's mental models to a fundamentally different situation. That never produces good outcomes.
+
+The narrative needs updating — and the professionals who update it first will have a real advantage.
+
+I could be wrong. But I'd rather say this early and be challenged than stay quiet while it plays out.${ctaLine}${ending}`;
+  }
+  return `${item.summary}\n\nThe professionals who thrive won't be the ones who worked harder. They'll be the ones who understood this shift first.\n\n${hashtags}`;
+}
+
+// ── WORKFLOW ─────────────────────────────────────────────────────────────────
+async function runFlow(){
+  if(S.running)return;
+  S.running=true;S.items=[];
+  const btn=document.getElementById('launchBtn'),ic=document.getElementById('lIcon'),tx=document.getElementById('lTxt');
+  btn.disabled=true;ic.innerHTML='<span style="animation:spin 0.6s linear infinite;display:inline-block">⟳</span>';tx.textContent='RUNNING...';
+  const thresh=parseFloat(document.getElementById('thresh').value);
+  const maxF=parseInt(document.getElementById('maxF').value);
+  const autoG=document.getElementById('autoG').checked;
+  document.getElementById('logBox').innerHTML='';
+  ['sF','sP','sG','sA'].forEach(id=>{document.getElementById(id).textContent=id==='sA'?'—':'0'});
+
+  setPipe(1);
+  log(`Workflow started — threshold: ${thresh.toFixed(2)} | style: ${S.style} | source: ${S.feedKey}`,'info');
+
+  // ── REAL RSS FETCH ──
+  const customUrl = document.getElementById('customUrl').value.trim();
+  const feedUrl = customUrl || FEED_URLS[S.feedKey] || FEED_URLS.tech;
+  log(`Fetching: ${feedUrl}`, 'info');
+  const articles = await fetchRSS(feedUrl);
+  console.log("ARTICLES:", articles);
+  const feed = (articles || []).slice(0, maxF).map(item => ({
+    title: item.title || 'Untitled',
+    summary: item.description
+      ? item.description.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().substring(0,300)
+      : (item.content||'').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().substring(0,300),
+    date: item.pubDate ? new Date(item.pubDate).toLocaleDateString('en',{month:'short',day:'numeric'}) : 'Recent',
+    src: item.author || feedUrl.replace(/https?:\/\//,'').split('/')[0],
+    link: item.link || '',
+  }));
+  log(`✓ ${feed.length} articles fetched from RSS feed`, 'success');
+  document.getElementById('sF').textContent=feed.length;
+
+  setPipe(2);
+  log(`Running AI quality filter on ${feed.length} articles...`,'info');
+  await sleep(300);
+
+  // ── FILTER + GENERATE: articles.forEach pattern ──────────────────────────
+  let passed=0, gc=0, scores=[];
+
+  for(const article of feed){
+    const item = {...article};
+    log(`Analyzing: "${item.title.substring(0,44)}..."`,'info');
+    await sleep(220);
+
+    const scoreResult = calculateScore(item);
+    item.score  = scoreResult.score;
+    item.reason = scoreResult.reason;
+    item.post   = null;
+
+    if(scoreResult.score >= thresh){
+      item.status = 'pass';
+      passed++;
+      log(`✅ PASS (${(scoreResult.score*100).toFixed(0)}/100) — "${item.title.substring(0,36)}..."`,'success');
+
+      if(autoG){
+        setPipe(3);
+        log(`✍️ Writing ${S.style} post: "${item.title.substring(0,36)}..."`,'info');
+        await sleep(400);
+        item.post = makePost(item);
+        gc++;
+        document.getElementById('sG').textContent = gc;
+      }
+    } else {
+      item.status = 'fail';
+      log(`🚫 FILTERED (${(scoreResult.score*100).toFixed(0)}/100) — below threshold`,'warn');
+    }
+
+    scores.push(scoreResult.score);
+    S.items.push(item);
+    document.getElementById('sP').textContent = passed;
+    document.getElementById('sA').textContent = (scores.reduce((a,b)=>a+b,0)/scores.length*100).toFixed(0);
+    render();
+  }
+  log(`Filter complete — ${passed}/${feed.length} passed | ${gc} posts generated`,'success');
+
+
+  setPipe(4);
+  log(`🚀 Workflow complete! ${passed} high-quality posts ready for LinkedIn.`,'success');
+  btn.disabled=false;ic.textContent='✅';tx.textContent='DONE!';
+  setTimeout(()=>{ic.textContent='⚡';tx.textContent='LAUNCH WORKFLOW'},3000);
+  S.running=false;
+}
+
+async function genSingle(idx){
+  const btn=document.getElementById(`gb-${idx}`);
+  if(btn){btn.disabled=true;btn.textContent='⟳ Writing...'}
+  log(`Writing ${S.style} post for: "${S.items[idx].title.substring(0,38)}..."`,'info');
+  await sleep(500);
+  S.items[idx].post=makePost(S.items[idx]);
+  document.getElementById('sG').textContent=(parseInt(document.getElementById('sG').textContent)||0)+1;
+  log('✓ Post ready','success');render();
+}
+
+async function copyText(elId,btn){
+  const text=document.getElementById(elId)?.textContent||'';
+  try{
+    await navigator.clipboard.writeText(text);
+    btn.textContent='✅ Copied!';setTimeout(()=>btn.textContent='📋 Copy Post',1600);
+  }catch{alert(text)}
+}
+
+async function copyPost(idx,btnId){
+  const post=S.items[idx]?.post||'';
+  const btn=document.getElementById(btnId);
+  try{
+    await navigator.clipboard.writeText(post);
+    if(btn){btn.textContent='✅ Copied!';setTimeout(()=>btn.textContent='📋 Copy Post',1600)}
+  }catch{alert(post)}
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(){
+  const list=document.getElementById('feedList');
+  let items=S.items;
+  if(S.tab==='passed')items=items.filter(i=>i.status==='pass');
+  else if(S.tab==='failed')items=items.filter(i=>i.status==='fail');
+  else if(S.tab==='posts')items=items.filter(i=>!!i.post);
+
+  if(!items.length&&!S.items.length){
+    list.innerHTML=`<div class="empty"><div class="empty-icon">🔗</div><div class="empty-t">AWAITING LAUNCH</div><div class="empty-s">Click "Launch Workflow" to start the RSS → LinkedIn pipeline.</div></div>`;
+    return;
+  }
+  if(!items.length){
+    list.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-t">NOTHING HERE</div><div class="empty-s">No items match this filter tab yet.</div></div>`;
+    return;
+  }
+
+  const author=document.getElementById('authorN').value||'You';
+  const init=author.charAt(0).toUpperCase();
+
+  list.innerHTML=items.map(item=>{
+    const idx=S.items.indexOf(item);
+    const sc=item.score||0;
+    const rc=sc>=0.7?'#00ff88':sc>=0.5?'#ff6b35':'#ff4455';
+    const bid=`gb-${idx}`,cid=`cp-${idx}`;
+    return`<div class="fc ${item.status||''}" style="animation-delay:${idx*0.05}s">
+  <div class="fc-top">
+    <div style="flex:1">
+      <div class="fc-title">${item.title}</div>
+      <div class="fc-meta">📅 ${item.date} &nbsp;·&nbsp; 🌐 ${item.src} &nbsp;·&nbsp; ${item.status==='pass'?'<span style="color:var(--nova);font-weight:700">✅ PASSED</span>':'<span style="color:#ff8899;font-weight:700">🚫 FILTERED</span>'}</div>
+    </div>
+    <div class="score-ring" style="--rc:${rc}">${(sc*100).toFixed(0)}</div>
+  </div>
+  <div class="fc-summary">${item.summary}</div>
+  ${item.reason?`<div class="reason-chip">💡 ${item.reason}</div>`:''}
+  ${item.status==='pass'&&!item.post?`<button class="gen-btn" id="${bid}" onclick="genSingle(${idx})">✍️ Generate ${S.style.charAt(0).toUpperCase()+S.style.slice(1)} Post</button>`:''}
+  ${item.post?`<div class="li-card">
+    <div class="style-badge sb-${S.style}">${S.style}</div>
+    <div class="li-hdr">
+      <div class="li-av">${init}</div>
+      <div><div class="li-name">${author}</div><div class="li-role">LinkedIn Post Preview</div></div>
+    </div>
+    <div class="li-body">${item.post.replace(/\n/g,'<br/>')}</div>
+    <div class="li-footer">
+      <div class="li-reacts"><span class="li-r">👍 Like</span><span class="li-r">💬 Comment</span><span class="li-r">🔁 Repost</span><span class="li-r">📤 Send</span></div>
+      <button class="copy-btn" id="${cid}" onclick="copyPost(${idx},'${cid}')">📋 Copy Post</button>
+    </div>
+  </div>`:''}
+</div>`;
+  }).join('');
+}
+</script>
+
+<script>
+
+let selectedStyle = "educational";
+let selectedFeed  = "https://techcrunch.com/feed/";
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function getApiKey(){ return document.getElementById("apiKey").value.trim(); }
+
+async function callClaude(prompt){
+  const key = getApiKey();
+  if(!key) return null;
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 600,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await res.json();
+    if(data.error){ console.error("Claude error:", data.error.message); return null; }
+    return data.content[0].text.trim();
+  } catch(err){
+    console.error("API call failed:", err);
+    return null;
+  }
+}
+
+// ── FILTER ───────────────────────────────────────────────────────────────────
+async function aiFilter(title, desc){
+  const key = getApiKey();
+  if(!key) return fallbackFilter(title, desc);
+
+  const prompt = `Rate this article for LinkedIn value. Reply with ONLY a JSON object like: {"score": 75, "reason": "one sentence"}
+Score 0-100. High score = insightful, professional, valuable. Low score = promotional, spam, clickbait.
+Title: ${title}
+Summary: ${desc.substring(0, 200)}`;
+
+  const result = await callClaude(prompt);
+  if(!result) return fallbackFilter(title, desc);
+  try {
+    const json = JSON.parse(result.replace(/```json|```/g,"").trim());
+    return { score: json.score, reason: json.reason };
+  } catch {
+    return fallbackFilter(title, desc);
+  }
+}
+
+function fallbackFilter(title, desc){
+  let score = 50;
+  const t = (title + " " + desc).toLowerCase();
+  ["sale","discount","promo","sponsor","buy","free","click","limited","offer"].forEach(w=>{ if(t.includes(w)) score -= 12; });
+  ["research","strategy","framework","analysis","innovation","leadership","ai","data","technology"].forEach(w=>{ if(t.includes(w)) score += 8; });
+  if(desc.length > 100) score += 10;
+  return { score: Math.max(5, Math.min(99, score)), reason: score >= 60 ? "Relevant professional content." : "Low quality or promotional." };
+}
+
+// ── POST GENERATOR ────────────────────────────────────────────────────────────
+async function aiGeneratePost(title, desc){
+  const key = getApiKey();
+  if(!key) return fallbackPost(title, desc);
+
+  const styleGuides = {
+    authority:    "Bold, confident authority voice. Start with a powerful declarative statement. 3-4 short paragraphs. Strong takeaway + CTA.",
+    educational:  "Clear teacher voice. Open with a surprising insight. Break it down simply. Number key points. End with lesson + CTA.",
+    opinion:      "Contrarian, thought-provoking. Challenge a common belief. Give your reasoning. Invite debate at the end."
+  };
+
+  const prompt = `Write a LinkedIn post in ${selectedStyle.toUpperCase()} style.
+Style guide: ${styleGuides[selectedStyle]}
+Article: ${title}
+Summary: ${desc.substring(0, 250)}
+Rules: No markdown bold (**). Short paragraphs (2-3 lines). End with a question CTA. Add 4-5 hashtags on the last line. Write the post only, no intro.`;
+
+  const result = await callClaude(prompt);
+  return result || fallbackPost(title, desc);
+}
+
+function fallbackPost(title, desc){
+  const hooks = {
+    authority:   "Here is what most professionals are missing about this —",
+    educational: "Most people do not know this yet — here is a quick breakdown:",
+    opinion:     "Unpopular opinion: the way we talk about this is completely wrong."
+  };
+  return `${hooks[selectedStyle]}\n\n${title}\n\n${desc.substring(0,200)}...\n\nThe professionals who thrive won't be the ones who worked harder. They'll be the ones who understood this shift first.\n\nWhat's your take on this?\n\n#AI #Innovation #Tech #FutureOfWork`;
+}
+
+// ── MAIN WORKFLOW ─────────────────────────────────────────────────────────────
+async function launchAutomation(){
+  const key = getApiKey();
+  const btn = document.getElementById("launchBtn");
+  const ic  = document.getElementById("lIcon");
+  const tx  = document.getElementById("lTxt");
+
+  if(!key){
+    alert("Please enter your Claude API key first!");
+    return;
+  }
+
+  btn.disabled = true;
+  ic.innerHTML = '<span style="animation:spin 0.6s linear infinite;display:inline-block">⟳</span>';
+  tx.textContent = "RUNNING...";
+
+  const container = document.querySelector(".feed-list");
+  container.innerHTML = "";
+  document.getElementById("generatedPosts").innerHTML = "";
+
+  const thresh = parseFloat(document.getElementById("thresh").value);
+
+  console.log("Automation Started — fetching:", selectedFeed);
+
+  try {
+    const maxCount = parseInt(document.getElementById("maxF").value) || 5;
+
+    // Try NewsAPI first (real news), fallback to rss2json
+    let articles = await fetchFromNewsAPI(maxCount);
+
+    if(!articles){
+      console.log("NewsAPI not available — using rss2json");
+      const api = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(selectedFeed);
+      const response = await fetch(api);
+      const data = await response.json();
+      console.log("RSS Data:", data);
+      articles = data.items.slice(0, maxCount).map(item => ({
+        title:   item.title || "Untitled",
+        summary: (item.description || "").replace(/<[^>]+>/g,"").substring(0,300),
+        date:    item.pubDate ? new Date(item.pubDate).toLocaleDateString("en",{month:"short",day:"numeric"}) : "Recent",
+        src:     item.author || selectedFeed.split("/")[2],
+        link:    item.link || ""
+      }));
+    }
+    let passed = 0, generated = 0;
+
+    document.getElementById("sF").textContent = articles.length;
+
+    for(const item of articles){
+      const title = item.title || "";
+      const desc  = (item.description || "").replace(/<[^>]+>/g, "").substring(0, 300);
+
+      // AI Filter
+      const { score, reason } = await aiFilter(title, desc);
+      const scoreInt = Math.round(score);
+      const passed_  = scoreInt >= (thresh * 100);
+
+      // Render article card
+      const card = document.createElement("div");
+      card.className = "fc " + (passed_ ? "pass" : "fail");
+      card.style.animation = "slideIn 0.4s ease both";
+
+      const rc = scoreInt >= 70 ? "#00ff88" : scoreInt >= 50 ? "#ff6b35" : "#ff4455";
+
+      card.innerHTML =
+        '<div class="fc-top">' +
+          '<div style="flex:1">' +
+            '<div class="fc-title">' + title + '</div>' +
+            '<div class="fc-meta">' + (item.author || "Source") + ' &nbsp;&middot;&nbsp; ' +
+              (passed_ ? '<span style="color:var(--nova);font-weight:700">✅ PASSED</span>' : '<span style="color:#ff8899;font-weight:700">🚫 FILTERED</span>') +
+            '</div>' +
+          '</div>' +
+          '<div class="score-ring" style="--rc:' + rc + '">' + scoreInt + '</div>' +
+        '</div>' +
+        '<div class="fc-summary">' + desc.substring(0, 160) + '...</div>' +
+        '<div class="reason-chip">💡 ' + reason + '</div>';
+
+      container.appendChild(card);
+
+      // ── MANUAL REVIEW BAR ─────────────────────────────────────────────────
+      const reviewBar = document.createElement("div");
+      reviewBar.style.cssText = "display:flex;gap:8px;margin-top:12px;align-items:center;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)";
+
+      const reviewLabel = document.createElement("span");
+      reviewLabel.style.cssText = "font-size:0.7rem;color:var(--muted);font-weight:600;margin-right:4px";
+      reviewLabel.textContent = "👤 Your Review:";
+
+      const approveBtn = document.createElement("button");
+      approveBtn.style.cssText = "flex:1;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--nova);border-radius:8px;padding:8px 10px;font-size:0.74rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s";
+      approveBtn.textContent = "✅ Approve & Generate Post";
+
+      const rejectBtn = document.createElement("button");
+      rejectBtn.style.cssText = "flex:1;background:rgba(255,68,85,0.08);border:1px solid rgba(255,68,85,0.25);color:#ff8899;border-radius:8px;padding:8px 10px;font-size:0.74rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s";
+      rejectBtn.textContent = "🚫 Reject";
+
+      // APPROVE — generate post
+      approveBtn.onclick = async function(){
+        approveBtn.disabled = true;
+        rejectBtn.disabled  = true;
+        approveBtn.textContent = "⟳ Generating...";
+        approveBtn.style.opacity = "0.6";
+
+        passed++;
+        document.getElementById("sP").textContent = passed;
+
+        const postText = await aiGeneratePost(title, desc);
+        generated++;
+        document.getElementById("sG").textContent = generated;
+
+        // Show post card
+        const postCard  = document.createElement("div");
+        postCard.className = "li-card";
+        postCard.style.marginTop = "12px";
+        postCard.style.animation = "slideIn 0.4s ease both";
+
+        const authorName = document.getElementById("authorN").value || "You";
+        const hdrEl = document.createElement("div");
+        hdrEl.className = "li-hdr";
+        hdrEl.innerHTML =
+          "<div class='li-av'>" + authorName.charAt(0).toUpperCase() + "</div>" +
+          "<div><div class='li-name'>" + authorName + "</div>" +
+          "<div class='li-role'>" + selectedStyle + " · LinkedIn Post</div></div>" +
+          "<span class='style-badge sb-" + selectedStyle + "'>" + selectedStyle + "</span>";
+
+        const bodyEl = document.createElement("div");
+        bodyEl.className = "li-body";
+        bodyEl.style.whiteSpace = "pre-wrap";
+        bodyEl.textContent = postText;
+
+        const copyBtn = document.createElement("button");
+        copyBtn.className = "copy-btn";
+        copyBtn.textContent = "📋 Copy";
+        copyBtn.onclick = function(){
+          navigator.clipboard.writeText(bodyEl.textContent).then(()=>{
+            copyBtn.textContent = "✅ Copied!";
+            setTimeout(()=>{ copyBtn.textContent = "📋 Copy"; }, 1500);
+          });
+        };
+
+        // Option 1: Copy button
+        // (copyBtn already defined above)
+
+        // Option 2: LinkedIn API (direct post)
+        const liApiBtn = document.createElement("button");
+        liApiBtn.className = "copy-btn";
+        liApiBtn.style.cssText = "background:rgba(0,119,181,0.15);border:1px solid rgba(0,119,181,0.4);color:#38bdf8;margin-left:6px";
+        liApiBtn.textContent = "🔗 API Post";
+        liApiBtn.title = "Post directly via LinkedIn API (needs token)";
+        liApiBtn.onclick = function(){ postToLinkedIn(bodyEl.textContent, liApiBtn); };
+
+        // Option 3: LinkedIn Share URL (no login needed)
+        const liShareBtn = document.createElement("button");
+        liShareBtn.className = "copy-btn";
+        liShareBtn.style.cssText = "background:rgba(0,119,181,0.08);border:1px solid rgba(0,119,181,0.25);color:#38bdf8;margin-left:6px";
+        liShareBtn.textContent = "📤 Share on LinkedIn";
+        liShareBtn.title = "Opens LinkedIn share popup (no API key needed)";
+        liShareBtn.onclick = function(){
+          const text = encodeURIComponent(bodyEl.textContent.substring(0, 700));
+          window.open("https://www.linkedin.com/sharing/share-offsite/?text=" + text, "_blank", "width=600,height=600");
+        };
+
+        const footerEl = document.createElement("div");
+        footerEl.className = "li-footer";
+        footerEl.innerHTML = "<div class='li-reacts'><span class='li-r'>👍 Like</span><span class='li-r'>💬 Comment</span><span class='li-r'>🔁 Repost</span></div>";
+        const btnGroup = document.createElement("div");
+        btnGroup.style.cssText = "display:flex;flex-wrap:wrap;gap:4px";
+        btnGroup.appendChild(copyBtn);
+        btnGroup.appendChild(liShareBtn);
+        btnGroup.appendChild(liApiBtn);
+        footerEl.appendChild(btnGroup);
+
+        postCard.appendChild(hdrEl);
+        postCard.appendChild(bodyEl);
+        postCard.appendChild(footerEl);
+        card.appendChild(postCard);
+
+        // Update review bar
+        reviewBar.innerHTML = "<span style='color:var(--nova);font-size:0.75rem;font-weight:700'>✅ Approved — Post Generated!</span>";
+        card.style.borderColor = "rgba(0,255,136,0.25)";
+        card.style.cssText += ";--bar:var(--nova)";
+      };
+
+      // REJECT
+      rejectBtn.onclick = function(){
+        card.style.opacity = "0.4";
+        card.style.borderColor = "rgba(255,68,85,0.15)";
+        reviewBar.innerHTML = "<span style='color:#ff8899;font-size:0.75rem;font-weight:700'>🚫 Rejected — Skipped</span>";
+      };
+
+      reviewBar.appendChild(reviewLabel);
+      reviewBar.appendChild(approveBtn);
+      reviewBar.appendChild(rejectBtn);
+      card.appendChild(reviewBar);
+
+      // Update avg score
+      const allScores = [...document.querySelectorAll(".score-ring")].map(el => parseInt(el.textContent) || 0);
+      document.getElementById("sA").textContent = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length);
+    }
+
+    console.log("Done! Passed:", passed, "Generated:", generated);
+
+  } catch(err){
+    console.error("Workflow error:", err);
+    alert("Error: " + err.message);
+  }
+
+  btn.disabled = false;
+  ic.textContent = "✅";
+  tx.textContent = "DONE!";
+  setTimeout(()=>{ ic.textContent = "⚡"; tx.textContent = "LAUNCH WORKFLOW"; }, 3000);
+}
+
+
+
+
+// ── FREE API FUNCTIONS ────────────────────────────────────────────────────────
+
+async function testAPIs(){
+  const result = document.getElementById("apiTestResult");
+  result.textContent = "Testing...";
+  result.style.color = "var(--orbit)";
+
+  const claudeKey = document.getElementById("apiKey").value.trim();
+  const newsKey   = document.getElementById("newsApiKey").value.trim();
+
+  let msgs = [];
+
+  // Test NewsAPI
+  if(newsKey){
+    try {
+      const r = await fetch(`https://newsapi.org/v2/top-headlines?category=technology&pageSize=1&apiKey=${newsKey}`);
+      const d = await r.json();
+      msgs.push(d.status === "ok" ? "📰 NewsAPI ✅" : "📰 NewsAPI ❌");
+    } catch { msgs.push("📰 NewsAPI ❌"); }
+  }
+
+  // Test Claude
+  if(claudeKey){
+    try {
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "x-api-key": claudeKey,
+          "anthropic-version":"2023-06-01",
+          "anthropic-dangerous-direct-browser-access":"true"
+        },
+        body: JSON.stringify({
+          model:"claude-haiku-4-5-20251001",
+          max_tokens:10,
+          messages:[{role:"user",content:"Hi"}]
+        })
+      });
+      const d = await r.json();
+      msgs.push(!d.error ? "🤖 Claude ✅" : "🤖 Claude ❌");
+    } catch { msgs.push("🤖 Claude ❌"); }
+  }
+
+  if(msgs.length === 0){
+    result.textContent = "Enter keys first!";
+    result.style.color = "var(--orbit)";
+  } else {
+    result.textContent = msgs.join("  ");
+    result.style.color = "var(--nova)";
+  }
+}
+
+// ── NEWSAPI FETCH ─────────────────────────────────────────────────────────────
+async function fetchFromNewsAPI(maxCount){
+  const key = document.getElementById("newsApiKey").value.trim();
+  if(!key) return null;
+
+  const query = selectedFeed.includes("techcrunch") ? "technology" :
+                selectedFeed.includes("hbr")        ? "business"   :
+                selectedFeed.includes("marketing")  ? "marketing"  : "technology";
+
+  try {
+    const res  = await fetch(`https://newsapi.org/v2/top-headlines?category=${query}&pageSize=${maxCount}&language=en&apiKey=${key}`);
+    const data = await res.json();
+    if(data.status !== "ok") return null;
+
+    return data.articles.map(a => ({
+      title:   a.title   || "Untitled",
+      summary: (a.description || a.content || "").replace(/<[^>]+>/g,"").substring(0,300),
+      date:    a.publishedAt ? new Date(a.publishedAt).toLocaleDateString("en",{month:"short",day:"numeric"}) : "Recent",
+      src:     a.source?.name || "News",
+      link:    a.url || ""
+    }));
+  } catch(err) {
+    console.error("NewsAPI error:", err);
+    return null;
+  }
+}
+
+// ── LINKEDIN API ──────────────────────────────────────────────────────────────
+function getLiToken(){ return document.getElementById("liToken").value.trim(); }
+function getLiUrn(){   return document.getElementById("liPersonUrn").value.trim(); }
+
+// ── LINKEDIN OAUTH CONNECT ────────────────────────────────────────────────────
+// NOTE: For full OAuth, a backend is needed. This implements the best
+// browser-side flow: OAuth popup + manual token fallback.
+
+function connectLinkedIn(){
+  // Show modal with two options
+  const modal = document.createElement("div");
+  modal.id = "liModal";
+  modal.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)";
+
+  modal.innerHTML = `
+    <div style="background:#0d1e35;border:1px solid #1a4060;border-radius:16px;padding:28px 30px;max-width:420px;width:90%;position:relative">
+      <button onclick="document.getElementById('liModal').remove()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:#4a6888;font-size:1.2rem;cursor:pointer">✕</button>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="#0077b5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        <div style="font-size:1rem;font-weight:700;color:#e8f4ff">Connect LinkedIn</div>
+      </div>
+
+      <div style="font-size:0.8rem;color:#6888aa;margin-bottom:20px;line-height:1.6">
+        Paste your LinkedIn <strong style="color:#38bdf8">Access Token</strong> below.<br/>
+        Get it from: <a href="https://www.linkedin.com/developers/tools/oauth/token-generator" target="_blank" style="color:#0077b5">LinkedIn Token Generator →</a>
+      </div>
+
+      <input type="password" id="liTokenInput" placeholder="Paste Access Token here..."
+        style="width:100%;background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:#e8f4ff;border-radius:8px;padding:10px 13px;font-size:0.82rem;outline:none;font-family:inherit;margin-bottom:10px"/>
+
+      <input type="text" id="liUrnInput" placeholder="Person URN: urn:li:person:ABC123 (optional)"
+        style="width:100%;background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:#e8f4ff;border-radius:8px;padding:10px 13px;font-size:0.82rem;outline:none;font-family:inherit;margin-bottom:16px"/>
+
+      <button onclick="saveLinkedInToken()"
+        style="width:100%;background:linear-gradient(135deg,#0077b5,#005983);border:none;color:white;border-radius:9px;padding:12px;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px">
+        ✅ Connect Account
+      </button>
+
+      <div style="text-align:center;font-size:0.65rem;color:#4a6888">
+        Token is only stored in your browser memory — never sent anywhere except LinkedIn.
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  setTimeout(()=> document.getElementById("liTokenInput")?.focus(), 100);
+}
+
+async function saveLinkedInToken(){
+  const token = document.getElementById("liTokenInput")?.value.trim();
+  const urn   = document.getElementById("liUrnInput")?.value.trim();
+
+  if(!token){ alert("Please paste your Access Token!"); return; }
+
+  // Save to hidden inputs
+  document.getElementById("liToken").value = token;
+
+  // Try to get profile info
+  try {
+    const res  = await fetch("https://api.linkedin.com/v2/userinfo", {
+      headers: { "Authorization": "Bearer " + token }
+    });
+    const data = await res.json();
+
+    const name = data.name || data.given_name || "LinkedIn User";
+    const sub  = data.sub || "";
+
+    document.getElementById("liToken").value     = token;
+    document.getElementById("liPersonUrn").value = urn || (sub ? "urn:li:person:" + sub : "");
+    document.getElementById("liName").textContent  = name;
+    document.getElementById("liAvatar").textContent = name.charAt(0).toUpperCase();
+
+    document.getElementById("liNotConnected").style.display = "none";
+    document.getElementById("liConnected").style.display    = "block";
+
+    document.getElementById("liModal")?.remove();
+    console.log("LinkedIn connected:", name);
+
+  } catch(err) {
+    // CORS on userinfo — still save token and use manual URN
+    const name = "LinkedIn User";
+    document.getElementById("liToken").value     = token;
+    document.getElementById("liPersonUrn").value = urn || "";
+    document.getElementById("liName").textContent  = name;
+    document.getElementById("liAvatar").textContent = "LI";
+
+    document.getElementById("liNotConnected").style.display = "none";
+    document.getElementById("liConnected").style.display    = "block";
+
+    document.getElementById("liModal")?.remove();
+    if(!urn) alert("Token saved! If posting fails, also add your Person URN.\nFormat: urn:li:person:ABC123");
+  }
+}
+
+function disconnectLinkedIn(){
+  document.getElementById("liToken").value    = "";
+  document.getElementById("liPersonUrn").value = "";
+  document.getElementById("liNotConnected").style.display = "block";
+  document.getElementById("liConnected").style.display    = "none";
+}
+
+
+async function postToLinkedIn(postText, btnEl){
+  const token = getLiToken();
+  const urn   = getLiUrn();
+
+  if(!token){ alert("LinkedIn Access Token missing!"); return; }
+  if(!urn)  { alert("Person URN missing! Format: urn:li:person:ABC123"); return; }
+
+  btnEl.disabled = true;
+  btnEl.textContent = "⟳ Posting...";
+
+  const body = {
+    author: urn,
+    lifecycleState: "PUBLISHED",
+    specificContent: {
+      "com.linkedin.ugc.ShareContent": {
+        shareCommentary: { text: postText },
+        shareMediaCategory: "NONE"
+      }
+    },
+    visibility: {
+      "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
+    }
+  };
+
+  try {
+    const res = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token,
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0"
+      },
+      body: JSON.stringify(body)
+    });
+
+    if(res.status === 201){
+      btnEl.textContent = "✅ Posted!";
+      btnEl.style.background = "rgba(0,255,136,0.15)";
+      btnEl.style.borderColor = "rgba(0,255,136,0.4)";
+      btnEl.style.color = "var(--nova)";
+      console.log("Posted to LinkedIn successfully!");
+    } else {
+      const err = await res.json();
+      console.error("LinkedIn post error:", err);
+      // CORS likely — show manual fallback
+      btnEl.textContent = "⚠️ CORS — See Console";
+      btnEl.style.color = "var(--orbit)";
+      alert("LinkedIn API needs a backend proxy due to CORS.\n\nSolution:\n1. Use LinkedIn Share URL below\n2. Or deploy a simple Node.js proxy\n\nError: " + (err.message || res.status));
+    }
+  } catch(err) {
+    console.error("Post failed:", err);
+    btnEl.textContent = "⚠️ CORS Error";
+    btnEl.style.color = "var(--orbit)";
+    // Open LinkedIn share as fallback
+    const shareUrl = "https://www.linkedin.com/sharing/share-offsite/?text=" + encodeURIComponent(postText.substring(0, 700));
+    window.open(shareUrl, "_blank");
+  }
+
+  setTimeout(()=>{
+    btnEl.disabled = false;
+    btnEl.textContent = "🔗 Post to LinkedIn";
+    btnEl.style.background = "";
+    btnEl.style.borderColor = "";
+    btnEl.style.color = "";
+  }, 4000);
+}
+
+</script>
+
+</body>
+</html>
