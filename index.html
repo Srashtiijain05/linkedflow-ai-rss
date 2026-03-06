@@ -525,20 +525,7 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
       </div>
 
       <div id="schedulerSettings">
-        <div class="ctrl-row">
-          <span class="ctrl-lbl">⏱ Interval</span>
-          <select id="postInterval" style="background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:var(--text);border-radius:7px;padding:4px 8px;font-size:0.8rem;font-family:inherit">
-            <option value="5">Every 5 min</option>
-            <option value="10">Every 10 min</option>
-            <option value="15">Every 15 min</option>
-            <option value="30">Every 30 min</option>
-            <option value="60">Every 1 hour</option>
-            <option value="120">Every 2 hours</option>
-            <option value="360">Every 6 hours</option>
-            <option value="720">Every 12 hours</option>
-          </select>
-        </div>
-        <!-- Keep hidden for backward compat -->
+        <input type="hidden" id="postInterval" value="5"/>
         <input type="hidden" id="morningTime" value="09:00"/>
         <input type="hidden" id="eveningTime" value="18:00"/>
 
