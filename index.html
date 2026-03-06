@@ -553,45 +553,6 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
       </div>
     </div>
 
-    <!-- Panel 1: Claude API -->
-    <div class="panel" style="border-color:rgba(123,47,255,0.25)">
-
-      <!-- Header with toggle -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div class="panel-hdr" style="color:var(--pulse);margin-bottom:0">🤖 Claude API Key</div>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <span style="font-size:0.6rem;color:var(--muted)" id="claudeModeLabel">Template</span>
-          <span style="position:relative;display:inline-block;width:34px;height:18px">
-            <input type="checkbox" id="useClaudeAI" onchange="toggleClaudeMode()" style="opacity:0;width:0;height:0"/>
-            <span id="claudeToggleBg" style="position:absolute;cursor:pointer;inset:0;background:#1a3050;border-radius:20px;transition:0.3s">
-              <span id="claudeToggleDot" style="position:absolute;width:12px;height:12px;background:#4a6888;border-radius:50%;left:3px;top:3px;transition:0.3s"></span>
-            </span>
-          </span>
-          <span style="font-size:0.6rem;color:var(--pulse)">AI</span>
-        </label>
-      </div>
-
-      <!-- Mode info badge -->
-      <div id="claudeModeBadge" style="font-size:0.65rem;padding:5px 10px;border-radius:7px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid #1a3050;color:var(--muted);line-height:1.4">
-        ⚡ <b style="color:var(--text)">Template Mode</b> — Free, no key needed.<br/>
-        Fixed post format, works instantly.
-      </div>
-
-      <!-- Key input (hidden by default) -->
-      <div id="claudeKeySection" style="display:none">
-        <input type="password" id="apiKey" placeholder="sk-ant-api03-xxxx..." style="margin-bottom:6px"/>
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <a href="https://console.anthropic.com" target="_blank"
-             style="font-size:0.62rem;color:var(--pulse);text-decoration:none">
-            🔗 Get Free Key ($5 credit) →
-          </a>
-          <span id="claudeStatus" style="font-size:0.62rem;color:var(--muted)">● Not tested</span>
-        </div>
-      </div>
-
-
-    </div>
-
     <!-- Panel 2: NewsAPI -->
     <div class="panel" style="border-color:rgba(0,212,255,0.2)">
       <div class="panel-hdr" style="color:var(--glow)">📰 NewsAPI Key</div>
@@ -613,7 +574,7 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
       style="width:100%;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.2);
              color:var(--glow);border-radius:9px;padding:9px;font-size:0.75rem;font-weight:700;
              cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px">
-      🧪 Test Both APIs
+      🧪 Test NewsAPI
       <span id="apiTestResult" style="font-size:0.65rem;color:var(--muted)"></span>
     </button>
 
@@ -1595,27 +1556,7 @@ async function testAPIs(){
     } catch { msgs.push("📰 NewsAPI ❌"); }
   }
 
-  // Test Claude
-  if(claudeKey){
-    try {
-      const r = await fetch("https://api.anthropic.com/v1/messages", {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
-          "x-api-key": claudeKey,
-          "anthropic-version":"2023-06-01",
-          "anthropic-dangerous-direct-browser-access":"true"
-        },
-        body: JSON.stringify({
-          model:"claude-haiku-4-5-20251001",
-          max_tokens:10,
-          messages:[{role:"user",content:"Hi"}]
-        })
-      });
-      const d = await r.json();
-      msgs.push(!d.error ? "🤖 Claude ✅" : "🤖 Claude ❌");
-    } catch { msgs.push("🤖 Claude ❌"); }
-  }
+
 
   if(msgs.length === 0){
     result.textContent = "Enter keys first!";
@@ -2031,40 +1972,7 @@ function skipScheduledPost(){
 }
 
 
-// ── CLAUDE MODE TOGGLE ────────────────────────────────────────────────────────
-function toggleClaudeMode(){
-  const on    = document.getElementById("useClaudeAI").checked;
-  const dot   = document.getElementById("claudeToggleDot");
-  const bg    = document.getElementById("claudeToggleBg");
-  const label = document.getElementById("claudeModeLabel");
-  const badge = document.getElementById("claudeModeBadge");
-  const keySection = document.getElementById("claudeKeySection");
 
-  if(on){
-    dot.style.transform  = "translateX(16px)";
-    dot.style.background = "#7B2FFF";
-    bg.style.background  = "rgba(123,47,255,0.2)";
-    label.style.color    = "var(--pulse)";
-    label.textContent    = "AI";
-    badge.style.background = "rgba(123,47,255,0.08)";
-    badge.style.borderColor = "rgba(123,47,255,0.25)";
-    badge.innerHTML = "🤖 <b style='color:var(--pulse)'>AI Mode</b> — Claude generates unique posts.<br/><span style='color:#8aaabb'>Paste your API key below.</span>";
-    keySection.style.display = "block";
-  } else {
-    dot.style.transform  = "translateX(0)";
-    dot.style.background = "#4a6888";
-    bg.style.background  = "#1a3050";
-    label.style.color    = "var(--muted)";
-    label.textContent    = "Template";
-    badge.style.background = "rgba(255,255,255,0.03)";
-    badge.style.borderColor = "#1a3050";
-    badge.innerHTML = "⚡ <b style='color:var(--text)'>Template Mode</b> — Free, no key needed.<br/><span style='color:#8aaabb'>Fixed post format, works instantly.</span>";
-    keySection.style.display = "none";
-    // Clear key so fallback is used
-    const keyEl = document.getElementById("apiKey");
-    if(keyEl) keyEl.value = "";
-  }
-}
 </script>
 
 </body>
