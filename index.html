@@ -347,7 +347,7 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
 <div class="hero">
   <div class="hero-chip">🎯 Smart Content Automation System</div>
   <h1>Turn RSS Feeds Into<br/><em>LinkedIn Posts That Perform</em></h1>
-  <p>AI se sirf high-quality, insightful content filter karo — phir usse ready-to-publish LinkedIn posts mein convert karo. Quality over quantity.</p>
+  <p>Filter only high-quality, insightful content with AI — then convert it into ready-to-publish LinkedIn posts. Quality over quantity.</p>
 </div>
 
 <!-- WORKFLOW STRIP -->
@@ -507,7 +507,7 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
 
     <div class="panel">
       <div class="panel-hdr">👤 Author</div>
-      <input type="text" id="authorN" value="Alex Morgan" placeholder="Your Name"/>
+      <input type="text" id="authorN" value="Srashti Jain" placeholder="Your Name"/>
     </div>
 
     <!-- Auto Scheduler Panel -->
@@ -542,7 +542,7 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
 
         <div id="autoModeInfo" style="background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.15);border-radius:8px;padding:10px;margin-top:8px">
           <div style="font-size:0.65rem;color:#6888aa;line-height:1.6">
-            ⏸ <b style="color:var(--text)">Preview Mode:</b> Popup aayega, aap approve karogi
+            ⏸ <b style="color:var(--text)">Preview Mode:</b> A preview popup will appear for your approval before posting
           </div>
         </div>
 
@@ -556,7 +556,7 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
     <div class="panel" style="border-color:rgba(0,212,255,0.2)">
       <div class="panel-hdr" style="color:var(--glow)">📰 NewsAPI Key</div>
       <div style="font-size:0.7rem;color:#8aaabb;margin-bottom:8px;line-height:1.5">
-        Real live news articles fetch karne ke liye
+        Fetch real-time news articles for your posts
       </div>
       <input type="password" id="newsApiKey" placeholder="abc123def456..." style="margin-bottom:6px"/>
       <div style="display:flex;align-items:center;justify-content:space-between">
@@ -1683,7 +1683,7 @@ async function saveLinkedInToken(){
   const token = tokenEl ? tokenEl.value.trim() : "";
   const urn   = urnEl   ? urnEl.value.trim()   : "";
 
-  if(!token){ alert("Token paste karo pehle!"); return; }
+  if(!token){ alert("Please paste your Access Token first!"); return; }
 
   // Show loading
   const btn = document.querySelector("#liModal button[onclick='saveLinkedInToken()']");
@@ -2092,13 +2092,13 @@ function toggleAutoPostMode(){
     dot.style.transform  = "translateX(18px)";
     dot.style.background = "var(--nova)";
     bar.style.background = "rgba(0,255,136,0.25)";
-    info.innerHTML = '<div style="font-size:0.65rem;color:#6888aa;line-height:1.6">⚡ <b style="color:var(--nova)">Full Auto Mode:</b> Seedha LinkedIn pe post hogi — koi popup nahi!</div>';
+    info.innerHTML = '<div style="font-size:0.65rem;color:#6888aa;line-height:1.6">⚡ <b style="color:var(--nova)">Full Auto Mode:</b> Posts will be published directly to LinkedIn — no popup, no approval needed!</div>';
     info.style.borderColor = "rgba(0,255,136,0.3)";
   } else {
     dot.style.transform  = "translateX(0)";
     dot.style.background = "#4a6888";
     bar.style.background = "#1a3050";
-    info.innerHTML = '<div style="font-size:0.65rem;color:#6888aa;line-height:1.6">⏸ <b style="color:var(--text)">Preview Mode:</b> Popup aayega, aap approve karogi</div>';
+    info.innerHTML = '<div style="font-size:0.65rem;color:#6888aa;line-height:1.6">⏸ <b style="color:var(--text)">Preview Mode:</b> A preview popup will appear for your approval before posting</div>';
     info.style.borderColor = "rgba(0,255,136,0.15)";
   }
 }
