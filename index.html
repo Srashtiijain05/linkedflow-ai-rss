@@ -497,7 +497,7 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
       </div>
       <div class="ctrl-row">
         <span class="ctrl-lbl">Auto-Generate Posts</span>
-        <input type="checkbox" id="autoG" checked/>
+        <input type="checkbox" id="autoG"/>
       </div>
       <div class="ctrl-row">
         <span class="ctrl-lbl">Include CTA</span>
@@ -510,20 +510,86 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
       <input type="text" id="authorN" value="Alex Morgan" placeholder="Your Name"/>
     </div>
 
+    <!-- Auto Scheduler Panel -->
+    <div class="panel" style="border-color:rgba(0,255,136,0.2)">
+      <div class="panel-hdr" style="color:var(--nova)">⏰ Auto Scheduler</div>
+
+      <div class="ctrl-row" style="margin-bottom:8px">
+        <span class="ctrl-lbl" style="font-weight:700">Enable Scheduler</span>
+        <label style="position:relative;display:inline-block;width:38px;height:20px">
+          <input type="checkbox" id="schedulerOn" onchange="toggleScheduler()" style="opacity:0;width:0;height:0"/>
+          <span id="schedulerSlider" style="position:absolute;cursor:pointer;inset:0;background:#1a3050;border-radius:20px;transition:0.3s">
+            <span id="schedulerDot" style="position:absolute;width:14px;height:14px;background:#4a6888;border-radius:50%;left:3px;top:3px;transition:0.3s"></span>
+          </span>
+        </label>
+      </div>
+
+      <div id="schedulerSettings">
+        <div class="ctrl-row">
+          <span class="ctrl-lbl">🌅 Morning Post</span>
+          <input type="time" id="morningTime" value="09:00"
+            style="background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:var(--text);border-radius:7px;padding:4px 8px;font-size:0.8rem;font-family:inherit"/>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-lbl">🌆 Evening Post</span>
+          <input type="time" id="eveningTime" value="18:00"
+            style="background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:var(--text);border-radius:7px;padding:4px 8px;font-size:0.8rem;font-family:inherit"/>
+        </div>
+
+        <div style="background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.15);border-radius:8px;padding:10px;margin-top:8px">
+          <div style="font-size:0.68rem;color:var(--nova);font-weight:700;margin-bottom:4px">📋 How it works:</div>
+          <div style="font-size:0.65rem;color:#6888aa;line-height:1.6">
+            1. Scheduler time pe RSS fetch karega<br/>
+            2. AI best article choose karega<br/>
+            3. <b style="color:var(--text)">Preview popup dikhega</b><br/>
+            4. Aap Approve ya Skip karogi<br/>
+            5. Approve kiya → LinkedIn pe post!
+          </div>
+        </div>
+
+        <div style="margin-top:8px;font-size:0.65rem;color:var(--muted);text-align:center">
+          Status: <span id="schedulerStatus" style="color:var(--muted)">● Off</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Panel 1: Claude API -->
     <div class="panel" style="border-color:rgba(123,47,255,0.25)">
-      <div class="panel-hdr" style="color:var(--pulse)">🤖 Claude API Key</div>
-      <div style="font-size:0.7rem;color:#8aaabb;margin-bottom:8px;line-height:1.5">
-        AI filtering + post generation ke liye
+
+      <!-- Header with toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div class="panel-hdr" style="color:var(--pulse);margin-bottom:0">🤖 Claude API Key</div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <span style="font-size:0.6rem;color:var(--muted)" id="claudeModeLabel">Template</span>
+          <span style="position:relative;display:inline-block;width:34px;height:18px">
+            <input type="checkbox" id="useClaudeAI" onchange="toggleClaudeMode()" style="opacity:0;width:0;height:0"/>
+            <span id="claudeToggleBg" style="position:absolute;cursor:pointer;inset:0;background:#1a3050;border-radius:20px;transition:0.3s">
+              <span id="claudeToggleDot" style="position:absolute;width:12px;height:12px;background:#4a6888;border-radius:50%;left:3px;top:3px;transition:0.3s"></span>
+            </span>
+          </span>
+          <span style="font-size:0.6rem;color:var(--pulse)">AI</span>
+        </label>
       </div>
-      <input type="password" id="apiKey" placeholder="sk-ant-api03-xxxx..." style="margin-bottom:6px"/>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <a href="https://console.anthropic.com" target="_blank"
-           style="font-size:0.62rem;color:var(--pulse);text-decoration:none">
-          🔗 Get Free Key →
-        </a>
-        <span id="claudeStatus" style="font-size:0.62rem;color:var(--muted)">● Not tested</span>
+
+      <!-- Mode info badge -->
+      <div id="claudeModeBadge" style="font-size:0.65rem;padding:5px 10px;border-radius:7px;margin-bottom:8px;background:rgba(255,255,255,0.03);border:1px solid #1a3050;color:var(--muted);line-height:1.4">
+        ⚡ <b style="color:var(--text)">Template Mode</b> — Free, no key needed.<br/>
+        Fixed post format, works instantly.
       </div>
+
+      <!-- Key input (hidden by default) -->
+      <div id="claudeKeySection" style="display:none">
+        <input type="password" id="apiKey" placeholder="sk-ant-api03-xxxx..." style="margin-bottom:6px"/>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <a href="https://console.anthropic.com" target="_blank"
+             style="font-size:0.62rem;color:var(--pulse);text-decoration:none">
+            🔗 Get Free Key ($5 credit) →
+          </a>
+          <span id="claudeStatus" style="font-size:0.62rem;color:var(--muted)">● Not tested</span>
+        </div>
+      </div>
+
+
     </div>
 
     <!-- Panel 2: NewsAPI -->
@@ -1756,6 +1822,249 @@ async function postToLinkedIn(postText, btnEl){
   }, 4000);
 }
 
+
+
+// ── AUTO SCHEDULER ────────────────────────────────────────────────────────────
+let schedulerIntervalId = null;
+
+function toggleScheduler(){
+  const on  = document.getElementById("schedulerOn").checked;
+  const dot = document.getElementById("schedulerDot");
+  const bar = document.getElementById("schedulerSlider");
+  const sta = document.getElementById("schedulerStatus");
+
+  if(on){
+    dot.style.transform   = "translateX(18px)";
+    dot.style.background  = "var(--nova)";
+    bar.style.background  = "rgba(0,255,136,0.25)";
+    sta.textContent = "● Running";
+    sta.style.color = "var(--nova)";
+    startScheduler();
+  } else {
+    dot.style.transform  = "translateX(0)";
+    dot.style.background = "#4a6888";
+    bar.style.background = "#1a3050";
+    sta.textContent = "● Off";
+    sta.style.color = "var(--muted)";
+    stopScheduler();
+  }
+}
+
+function startScheduler(){
+  stopScheduler(); // clear any old interval
+  checkSchedule(); // check immediately
+  schedulerIntervalId = setInterval(checkSchedule, 60000); // check every minute
+  console.log("Scheduler started");
+}
+
+function stopScheduler(){
+  if(schedulerIntervalId){
+    clearInterval(schedulerIntervalId);
+    schedulerIntervalId = null;
+  }
+}
+
+function checkSchedule(){
+  const now     = new Date();
+  const hh      = String(now.getHours()).padStart(2,"0");
+  const mm      = String(now.getMinutes()).padStart(2,"0");
+  const current = hh + ":" + mm;
+
+  const morning = document.getElementById("morningTime").value;
+  const evening = document.getElementById("eveningTime").value;
+
+  const sta = document.getElementById("schedulerStatus");
+
+  if(current === morning || current === evening){
+    const slot = current === morning ? "🌅 Morning" : "🌆 Evening";
+    sta.textContent = "● " + slot + " — Fetching...";
+    sta.style.color = "var(--orbit)";
+    runScheduledPost(slot);
+  } else {
+    // Show next scheduled time
+    const nextTime = getNextTime(morning, evening);
+    sta.textContent = "● Next: " + nextTime;
+    sta.style.color = "var(--nova)";
+  }
+}
+
+function getNextTime(morning, evening){
+  const now   = new Date();
+  const hh    = now.getHours();
+  const mm    = now.getMinutes();
+  const total = hh * 60 + mm;
+
+  const [mH, mM] = morning.split(":").map(Number);
+  const [eH, eM] = evening.split(":").map(Number);
+
+  const mTotal = mH * 60 + mM;
+  const eTotal = eH * 60 + eM;
+
+  if(total < mTotal) return morning;
+  if(total < eTotal) return evening;
+  return morning + " (tomorrow)";
+}
+
+async function runScheduledPost(slot){
+  const sta = document.getElementById("schedulerStatus");
+
+  try {
+    // 1. Fetch RSS
+    const maxCount = parseInt(document.getElementById("maxF").value) || 5;
+    const api = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(selectedFeed);
+    const res  = await fetch(api);
+    const data = await res.json();
+    const items = data.items.slice(0, maxCount);
+
+    // 2. Find best article using AI filter
+    let bestItem = null, bestScore = 0;
+    for(const item of items){
+      const title = item.title || "";
+      const desc  = (item.description || "").replace(/<[^>]+>/g,"").substring(0,300);
+      const {score} = await aiFilter(title, desc);
+      if(score > bestScore){ bestScore = score; bestItem = {title, desc, link: item.link}; }
+    }
+
+    if(!bestItem || bestScore < 0.5){
+      sta.textContent = "● No quality article found";
+      sta.style.color = "var(--orbit)";
+      return;
+    }
+
+    // 3. Generate post
+    const postText = await aiGeneratePost(bestItem.title, bestItem.desc);
+
+    // 4. Show PREVIEW POPUP — user approves or skips
+    showPreviewPopup(slot, bestItem.title, postText, bestScore);
+
+    sta.textContent = "● Waiting for approval...";
+    sta.style.color = "var(--orbit)";
+
+  } catch(err){
+    console.error("Scheduler error:", err);
+    sta.textContent = "● Error — check console";
+    sta.style.color = "#ff4455";
+  }
+}
+
+function showPreviewPopup(slot, articleTitle, postText, score){
+  // Remove existing popup if any
+  document.getElementById("schedulePopup")?.remove();
+
+  const popup = document.createElement("div");
+  popup.id = "schedulePopup";
+  popup.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);animation:fadeIn 0.3s ease";
+
+  popup.innerHTML = `
+    <div style="background:#0d1e35;border:1px solid rgba(0,255,136,0.3);border-radius:18px;padding:28px 30px;max-width:500px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <span style="font-size:1.4rem">${slot.split(" ")[0]}</span>
+        <div>
+          <div style="font-size:0.75rem;font-weight:700;color:var(--nova);text-transform:uppercase;letter-spacing:0.1em">Scheduled Post Ready</div>
+          <div style="font-size:0.65rem;color:var(--muted)">${slot} • Score: ${Math.round(score*100)}/100</div>
+        </div>
+        <div style="margin-left:auto;font-size:0.65rem;color:var(--muted);background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);padding:3px 10px;border-radius:20px">Preview</div>
+      </div>
+
+      <div style="font-size:0.72rem;color:#6888aa;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05)">
+        📰 ${articleTitle.substring(0,70)}...
+      </div>
+
+      <div id="previewBody" style="background:rgba(255,255,255,0.03);border:1px solid #1a3050;border-radius:10px;padding:14px;font-size:0.8rem;color:var(--text);line-height:1.7;max-height:200px;overflow-y:auto;white-space:pre-wrap;margin-bottom:16px">${postText}</div>
+
+      <div style="display:flex;gap:10px">
+        <button id="approvePostBtn"
+          style="flex:2;background:linear-gradient(135deg,#0077b5,#005983);border:none;color:white;border-radius:10px;padding:12px;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px">
+          ✅ Post to LinkedIn
+        </button>
+        <button onclick="skipScheduledPost()"
+          style="flex:1;background:rgba(255,68,85,0.1);border:1px solid rgba(255,68,85,0.3);color:#ff8899;border-radius:10px;padding:12px;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit">
+          🚫 Skip
+        </button>
+      </div>
+
+      <div style="text-align:center;margin-top:10px;font-size:0.62rem;color:var(--muted)">
+        Popup automatically closes in <span id="popupCountdown">60</span>s if no action taken
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(popup);
+
+  // Approve button
+  document.getElementById("approvePostBtn").onclick = async function(){
+    this.textContent = "⟳ Posting...";
+    this.disabled = true;
+    await postToLinkedIn(postText, this);
+    document.getElementById("schedulePopup")?.remove();
+    document.getElementById("schedulerStatus").textContent = "● Posted! ✅";
+    document.getElementById("schedulerStatus").style.color = "var(--nova)";
+  };
+
+  // Auto-close countdown
+  let secs = 60;
+  const countdown = setInterval(()=>{
+    secs--;
+    const el = document.getElementById("popupCountdown");
+    if(el) el.textContent = secs;
+    if(secs <= 0){
+      clearInterval(countdown);
+      skipScheduledPost();
+    }
+  }, 1000);
+
+  popup._countdown = countdown;
+}
+
+function skipScheduledPost(){
+  const popup = document.getElementById("schedulePopup");
+  if(popup){
+    if(popup._countdown) clearInterval(popup._countdown);
+    popup.remove();
+  }
+  const sta = document.getElementById("schedulerStatus");
+  if(sta){
+    sta.textContent = "● Skipped";
+    sta.style.color = "var(--muted)";
+  }
+}
+
+
+// ── CLAUDE MODE TOGGLE ────────────────────────────────────────────────────────
+function toggleClaudeMode(){
+  const on    = document.getElementById("useClaudeAI").checked;
+  const dot   = document.getElementById("claudeToggleDot");
+  const bg    = document.getElementById("claudeToggleBg");
+  const label = document.getElementById("claudeModeLabel");
+  const badge = document.getElementById("claudeModeBadge");
+  const keySection = document.getElementById("claudeKeySection");
+
+  if(on){
+    dot.style.transform  = "translateX(16px)";
+    dot.style.background = "#7B2FFF";
+    bg.style.background  = "rgba(123,47,255,0.2)";
+    label.style.color    = "var(--pulse)";
+    label.textContent    = "AI";
+    badge.style.background = "rgba(123,47,255,0.08)";
+    badge.style.borderColor = "rgba(123,47,255,0.25)";
+    badge.innerHTML = "🤖 <b style='color:var(--pulse)'>AI Mode</b> — Claude generates unique posts.<br/><span style='color:#8aaabb'>Paste your API key below.</span>";
+    keySection.style.display = "block";
+  } else {
+    dot.style.transform  = "translateX(0)";
+    dot.style.background = "#4a6888";
+    bg.style.background  = "#1a3050";
+    label.style.color    = "var(--muted)";
+    label.textContent    = "Template";
+    badge.style.background = "rgba(255,255,255,0.03)";
+    badge.style.borderColor = "#1a3050";
+    badge.innerHTML = "⚡ <b style='color:var(--text)'>Template Mode</b> — Free, no key needed.<br/><span style='color:#8aaabb'>Fixed post format, works instantly.</span>";
+    keySection.style.display = "none";
+    // Clear key so fallback is used
+    const keyEl = document.getElementById("apiKey");
+    if(keyEl) keyEl.value = "";
+  }
+}
 </script>
 
 </body>
