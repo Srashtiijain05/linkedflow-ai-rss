@@ -536,14 +536,20 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
             style="background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:var(--text);border-radius:7px;padding:4px 8px;font-size:0.8rem;font-family:inherit"/>
         </div>
 
-        <div style="background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.15);border-radius:8px;padding:10px;margin-top:8px">
-          <div style="font-size:0.68rem;color:var(--nova);font-weight:700;margin-bottom:4px">📋 How it works:</div>
+        <div class="ctrl-row" style="margin-top:8px">
+          <span class="ctrl-lbl" style="font-weight:700">⚡ Full Auto Post</span>
+          <label style="position:relative;display:inline-block;width:38px;height:20px">
+            <input type="checkbox" id="fullAutoPost" style="opacity:0;width:0;height:0"/>
+            <span id="autoPostSlider" style="position:absolute;cursor:pointer;inset:0;background:#1a3050;border-radius:20px;transition:0.3s"
+              onclick="toggleAutoPostMode()">
+              <span id="autoPostDot" style="position:absolute;width:14px;height:14px;background:#4a6888;border-radius:50%;left:3px;top:3px;transition:0.3s"></span>
+            </span>
+          </label>
+        </div>
+
+        <div id="autoModeInfo" style="background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.15);border-radius:8px;padding:10px;margin-top:8px">
           <div style="font-size:0.65rem;color:#6888aa;line-height:1.6">
-            1. Scheduler time pe RSS fetch karega<br/>
-            2. AI best article choose karega<br/>
-            3. <b style="color:var(--text)">Preview popup dikhega</b><br/>
-            4. Aap Approve ya Skip karogi<br/>
-            5. Approve kiya → LinkedIn pe post!
+            ⏸ <b style="color:var(--text)">Preview Mode:</b> Popup aayega, aap approve karogi
           </div>
         </div>
 
@@ -605,7 +611,6 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
           <button onclick="disconnectLinkedIn()" style="margin-left:auto;background:none;border:1px solid rgba(255,68,85,0.3);color:#ff8899;border-radius:6px;padding:3px 9px;font-size:0.65rem;cursor:pointer;font-family:inherit">Disconnect</button>
         </div>
         <input type="hidden" id="liToken"/>
-        <input type="hidden" id="liPersonUrn"/>
         <div id="liStatus" style="display:none"></div>
       </div>
     </div>
@@ -1462,15 +1467,7 @@ async function launchAutomation(){
         // Option 1: Copy button
         // (copyBtn already defined above)
 
-        // Option 2: LinkedIn API (direct post)
-        const liApiBtn = document.createElement("button");
-        liApiBtn.className = "copy-btn";
-        liApiBtn.style.cssText = "background:rgba(0,119,181,0.15);border:1px solid rgba(0,119,181,0.4);color:#38bdf8;margin-left:6px";
-        liApiBtn.textContent = "🔗 API Post";
-        liApiBtn.title = "Post directly via LinkedIn API (needs token)";
-        liApiBtn.onclick = function(){ postToLinkedIn(bodyEl.textContent, liApiBtn); };
-
-        // Option 3: LinkedIn Share URL (no login needed)
+        // Option 2: LinkedIn Share URL (no URN needed)
         const liShareBtn = document.createElement("button");
         liShareBtn.className = "copy-btn";
         liShareBtn.style.cssText = "background:rgba(0,119,181,0.08);border:1px solid rgba(0,119,181,0.25);color:#38bdf8;margin-left:6px";
@@ -1488,7 +1485,6 @@ async function launchAutomation(){
         btnGroup.style.cssText = "display:flex;flex-wrap:wrap;gap:4px";
         btnGroup.appendChild(copyBtn);
         btnGroup.appendChild(liShareBtn);
-        btnGroup.appendChild(liApiBtn);
         footerEl.appendChild(btnGroup);
 
         postCard.appendChild(hdrEl);
@@ -1595,8 +1591,8 @@ async function fetchFromNewsAPI(maxCount){
 }
 
 // ── LINKEDIN API ──────────────────────────────────────────────────────────────
-function getLiToken(){ return document.getElementById("liToken").value.trim(); }
-function getLiUrn(){   return document.getElementById("liPersonUrn").value.trim(); }
+function getLiToken(){ return window._liToken || ""; }
+function getLiUrn(){ const el = document.getElementById("liPersonUrn"); return el ? el.value.trim() : ""; }
 
 // ── LINKEDIN OAUTH CONNECT ────────────────────────────────────────────────────
 // NOTE: For full OAuth, a backend is needed. This implements the best
@@ -1622,10 +1618,13 @@ function connectLinkedIn(){
         Get it from: <a href="https://www.linkedin.com/developers/tools/oauth/token-generator" target="_blank" style="color:#0077b5">LinkedIn Token Generator →</a>
       </div>
 
-      <input type="password" id="liTokenInput" placeholder="Paste Access Token here..."
-        style="width:100%;background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:#e8f4ff;border-radius:8px;padding:10px 13px;font-size:0.82rem;outline:none;font-family:inherit;margin-bottom:10px"/>
+      <input type="password" id="liTokenInput" placeholder="1. Token paste karo..."
+        style="width:100%;background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:#e8f4ff;border-radius:8px;padding:10px 13px;font-size:0.82rem;outline:none;font-family:inherit;margin-bottom:8px"/>
 
-      <input type="text" id="liUrnInput" placeholder="Person URN: urn:li:person:ABC123 (optional)"
+      <input type="text" id="liUrnInput" placeholder="2. URN: urn:li:person:1772788136593"
+        style="width:100%;background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:#e8f4ff;border-radius:8px;padding:10px 13px;font-size:0.82rem;outline:none;font-family:inherit;margin-bottom:8px"/>
+
+      <input type="text" id="liNameInput" placeholder="3. Aapka naam: Srashti Jain"
         style="width:100%;background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:#e8f4ff;border-radius:8px;padding:10px 13px;font-size:0.82rem;outline:none;font-family:inherit;margin-bottom:16px"/>
 
       <button onclick="saveLinkedInToken()"
@@ -1642,55 +1641,86 @@ function connectLinkedIn(){
   setTimeout(()=> document.getElementById("liTokenInput")?.focus(), 100);
 }
 
-async function saveLinkedInToken(){
-  const token = document.getElementById("liTokenInput")?.value.trim();
-  const urn   = document.getElementById("liUrnInput")?.value.trim();
-
-  if(!token){ alert("Please paste your Access Token!"); return; }
-
-  // Save to hidden inputs
-  document.getElementById("liToken").value = token;
-
-  // Try to get profile info
+function decodeTokenName(token){
   try {
-    const res  = await fetch("https://api.linkedin.com/v2/userinfo", {
-      headers: { "Authorization": "Bearer " + token }
-    });
-    const data = await res.json();
-
-    const name = data.name || data.given_name || "LinkedIn User";
-    const sub  = data.sub || "";
-
-    document.getElementById("liToken").value     = token;
-    document.getElementById("liPersonUrn").value = urn || (sub ? "urn:li:person:" + sub : "");
-    document.getElementById("liName").textContent  = name;
-    document.getElementById("liAvatar").textContent = name.charAt(0).toUpperCase();
-
-    document.getElementById("liNotConnected").style.display = "none";
-    document.getElementById("liConnected").style.display    = "block";
-
-    document.getElementById("liModal")?.remove();
-    console.log("LinkedIn connected:", name);
-
-  } catch(err) {
-    // CORS on userinfo — still save token and use manual URN
-    const name = "LinkedIn User";
-    document.getElementById("liToken").value     = token;
-    document.getElementById("liPersonUrn").value = urn || "";
-    document.getElementById("liName").textContent  = name;
-    document.getElementById("liAvatar").textContent = "LI";
-
-    document.getElementById("liNotConnected").style.display = "none";
-    document.getElementById("liConnected").style.display    = "block";
-
-    document.getElementById("liModal")?.remove();
-    if(!urn) alert("Token saved! If posting fails, also add your Person URN.\nFormat: urn:li:person:ABC123");
+    // JWT has 3 parts: header.payload.signature
+    const parts = token.split(".");
+    if(parts.length >= 2){
+      // Decode base64 payload
+      const pad = parts[1].length % 4;
+      const b64 = parts[1].replace(/-/g,"+").replace(/_/g,"/") + "==".slice(0, pad ? 4-pad : 0);
+      const payload = JSON.parse(atob(b64));
+      console.log("Token payload:", payload);
+      // Try common name fields
+      const name = payload.name ||
+                   ((payload.given_name||"") + " " + (payload.family_name||"")).trim() ||
+                   payload.email?.split("@")[0] ||
+                   "";
+      return name || "";
+    }
+  } catch(e) {
+    console.log("Token decode failed:", e.message);
   }
+  return "";
+}
+
+async function saveLinkedInToken(){
+  const tokenEl = document.getElementById("liTokenInput");
+  const nameEl  = document.getElementById("liNameInput");
+  const urnEl   = document.getElementById("liUrnInput");
+
+  const token = tokenEl ? tokenEl.value.trim() : "";
+  const urn   = urnEl   ? urnEl.value.trim()   : "";
+
+  if(!token){ alert("Token paste karo pehle!"); return; }
+
+  // Show loading
+  const btn = document.querySelector("#liModal button[onclick='saveLinkedInToken()']");
+  if(btn){ btn.textContent = "⟳ Connecting..."; btn.disabled = true; }
+
+  let name = (nameEl && nameEl.value.trim()) ? nameEl.value.trim() : "";
+
+  // If URN given — fetch real name from LinkedIn
+  if(urn && !name){
+    try {
+      const r = await fetch("https://api.linkedin.com/v2/me", {
+        headers: {
+          "Authorization": "Bearer " + token,
+          "X-Restli-Protocol-Version": "2.0.0"
+        }
+      });
+      const d = await r.json();
+      if(d.localizedFirstName || d.localizedLastName){
+        name = ((d.localizedFirstName||"") + " " + (d.localizedLastName||"")).trim();
+      }
+      console.log("/v2/me:", d);
+    } catch(e) {
+      console.log("CORS blocked on /v2/me");
+    }
+  }
+
+  // Fallback: decode from JWT token
+  if(!name) name = decodeTokenName(token);
+
+  // Final fallback
+  if(!name) name = "LinkedIn User";
+
+  window._liToken = token;
+  window._liUrn   = urn;
+  window._liName  = name;
+
+  document.getElementById("liName").textContent   = name;
+  document.getElementById("liAvatar").textContent = name.charAt(0).toUpperCase();
+  document.getElementById("liNotConnected").style.display = "none";
+  document.getElementById("liConnected").style.display    = "block";
+  document.getElementById("liModal")?.remove();
+
+  console.log("Connected:", name, urn ? "with URN" : "without URN");
 }
 
 function disconnectLinkedIn(){
-  document.getElementById("liToken").value    = "";
-  document.getElementById("liPersonUrn").value = "";
+  window._liToken = "";
+  window._liName  = "";
   document.getElementById("liNotConnected").style.display = "block";
   document.getElementById("liConnected").style.display    = "none";
 }
@@ -1875,11 +1905,24 @@ async function runScheduledPost(slot){
     // 3. Generate post
     const postText = await aiGeneratePost(bestItem.title, bestItem.desc);
 
-    // 4. Show PREVIEW POPUP — user approves or skips
-    showPreviewPopup(slot, bestItem.title, postText, bestScore);
+    // 4. Full Auto OR Preview
+    const fullAuto = document.getElementById("fullAutoPost")?.checked;
 
-    sta.textContent = "● Waiting for approval...";
-    sta.style.color = "var(--orbit)";
+    if(fullAuto){
+      // Direct post — no popup
+      sta.textContent = "● Auto posting...";
+      sta.style.color = "var(--orbit)";
+      const fakeBtn = { disabled: false, textContent: "" };
+      await postToLinkedIn(postText, fakeBtn);
+      sta.textContent = "● Auto posted! ✅";
+      sta.style.color = "var(--nova)";
+      console.log("Auto posted:", bestItem.title);
+    } else {
+      // Show preview popup
+      showPreviewPopup(slot, bestItem.title, postText, bestScore);
+      sta.textContent = "● Waiting for approval...";
+      sta.style.color = "var(--orbit)";
+    }
 
   } catch(err){
     console.error("Scheduler error:", err);
@@ -1973,6 +2016,30 @@ function skipScheduledPost(){
 
 
 
+
+// ── AUTO POST MODE TOGGLE ─────────────────────────────────────────────────────
+function toggleAutoPostMode(){
+  const cb  = document.getElementById("fullAutoPost");
+  cb.checked = !cb.checked;
+  const on  = cb.checked;
+  const dot = document.getElementById("autoPostDot");
+  const bar = document.getElementById("autoPostSlider");
+  const info = document.getElementById("autoModeInfo");
+
+  if(on){
+    dot.style.transform  = "translateX(18px)";
+    dot.style.background = "var(--nova)";
+    bar.style.background = "rgba(0,255,136,0.25)";
+    info.innerHTML = '<div style="font-size:0.65rem;color:#6888aa;line-height:1.6">⚡ <b style="color:var(--nova)">Full Auto Mode:</b> Seedha LinkedIn pe post hogi — koi popup nahi!</div>';
+    info.style.borderColor = "rgba(0,255,136,0.3)";
+  } else {
+    dot.style.transform  = "translateX(0)";
+    dot.style.background = "#4a6888";
+    bar.style.background = "#1a3050";
+    info.innerHTML = '<div style="font-size:0.65rem;color:#6888aa;line-height:1.6">⏸ <b style="color:var(--text)">Preview Mode:</b> Popup aayega, aap approve karogi</div>';
+    info.style.borderColor = "rgba(0,255,136,0.15)";
+  }
+}
 </script>
 
 </body>
