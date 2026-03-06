@@ -581,20 +581,6 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
       </div>
     </div>
 
-    <!-- Backend Server Panel -->
-    <div class="panel" style="border-color:rgba(0,255,136,0.2)">
-      <div class="panel-hdr" style="color:var(--nova)">🖥️ Backend Server</div>
-      <div style="font-size:0.7rem;color:#8aaabb;margin-bottom:8px">
-        Auto post ke liye Vercel backend URL
-      </div>
-      <input type="text" id="backendUrl" placeholder="https://your-backend.vercel.app"
-        style="margin-bottom:6px"/>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:0.62rem;color:var(--muted)">Deploy karo → URL paste karo</span>
-        <span id="backendStatus" style="font-size:0.62rem;color:var(--muted)">● Not set</span>
-      </div>
-    </div>
-
     <!-- Test Both -->
     <button onclick="testAPIs()"
       style="width:100%;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.2);
