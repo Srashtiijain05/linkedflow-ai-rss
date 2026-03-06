@@ -487,7 +487,7 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
       <div class="ctrl-row">
         <span class="ctrl-lbl">Quality Threshold</span>
         <div style="display:flex;align-items:center;gap:7px">
-          <input type="range" min="0.3" max="0.9" step="0.05" value="0.7" id="thresh" oninput="document.getElementById('thv').textContent=parseFloat(this.value).toFixed(2)"/>
+          <input type="range" min="0.3" max="0.9" step="0.05" value="0.7" id="thresh" oninput="(document.getElementById('thv') || {}).textContent =parseFloat(this.value).toFixed(2)"/>
           <div class="ctrl-val" id="thv">0.70</div>
         </div>
       </div>
@@ -526,15 +526,21 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
 
       <div id="schedulerSettings">
         <div class="ctrl-row">
-          <span class="ctrl-lbl">🌅 Morning Post</span>
-          <input type="time" id="morningTime" value="09:00"
-            style="background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:var(--text);border-radius:7px;padding:4px 8px;font-size:0.8rem;font-family:inherit"/>
+          <span class="ctrl-lbl">⏱ Interval</span>
+          <select id="postInterval" style="background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:var(--text);border-radius:7px;padding:4px 8px;font-size:0.8rem;font-family:inherit">
+            <option value="5">Every 5 min</option>
+            <option value="10">Every 10 min</option>
+            <option value="15">Every 15 min</option>
+            <option value="30">Every 30 min</option>
+            <option value="60">Every 1 hour</option>
+            <option value="120">Every 2 hours</option>
+            <option value="360">Every 6 hours</option>
+            <option value="720">Every 12 hours</option>
+          </select>
         </div>
-        <div class="ctrl-row">
-          <span class="ctrl-lbl">🌆 Evening Post</span>
-          <input type="time" id="eveningTime" value="18:00"
-            style="background:rgba(255,255,255,0.04);border:1px solid #1a4060;color:var(--text);border-radius:7px;padding:4px 8px;font-size:0.8rem;font-family:inherit"/>
-        </div>
+        <!-- Keep hidden for backward compat -->
+        <input type="hidden" id="morningTime" value="09:00"/>
+        <input type="hidden" id="eveningTime" value="18:00"/>
 
         <div class="ctrl-row" style="margin-top:8px">
           <span class="ctrl-lbl" style="font-weight:700">⚡ Full Auto Post</span>
@@ -572,6 +578,20 @@ input[type="checkbox"]{width:16px;height:16px;accent-color:var(--glow);cursor:po
           🔗 Get Free Key (100/day) →
         </a>
         <span id="newsStatus" style="font-size:0.62rem;color:var(--muted)">● Not tested</span>
+      </div>
+    </div>
+
+    <!-- Backend Server Panel -->
+    <div class="panel" style="border-color:rgba(0,255,136,0.2)">
+      <div class="panel-hdr" style="color:var(--nova)">🖥️ Backend Server</div>
+      <div style="font-size:0.7rem;color:#8aaabb;margin-bottom:8px">
+        Auto post ke liye Vercel backend URL
+      </div>
+      <input type="text" id="backendUrl" placeholder="https://your-backend.vercel.app"
+        style="margin-bottom:6px"/>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:0.62rem;color:var(--muted)">Deploy karo → URL paste karo</span>
+        <span id="backendStatus" style="font-size:0.62rem;color:var(--muted)">● Not set</span>
       </div>
     </div>
 
@@ -1073,8 +1093,8 @@ async function runFlow(){
   S.running=true;S.items=[];
   const btn=document.getElementById('launchBtn'),ic=document.getElementById('lIcon'),tx=document.getElementById('lTxt');
   btn.disabled=true;ic.innerHTML='<span style="animation:spin 0.6s linear infinite;display:inline-block">⟳</span>';tx.textContent='RUNNING...';
-  const thresh=parseFloat(document.getElementById('thresh').value);
-  const maxF=parseInt(document.getElementById('maxF').value);
+  const thresh=parseFloat(document.getElementById('thresh')?.value);
+  const maxF=parseInt(document.getElementById('maxF')?.value);
   const autoG=document.getElementById('autoG').checked;
   document.getElementById('logBox').innerHTML='';
   ['sF','sP','sG','sA'].forEach(id=>{document.getElementById(id).textContent=id==='sA'?'—':'0'});
@@ -1083,7 +1103,7 @@ async function runFlow(){
   log(`Workflow started — threshold: ${thresh.toFixed(2)} | style: ${S.style} | source: ${S.feedKey}`,'info');
 
   // ── REAL RSS FETCH ──
-  const customUrl = document.getElementById('customUrl').value.trim();
+  const customUrl = document.getElementById('customUrl')?.value.trim();
   const feedUrl = customUrl || FEED_URLS[S.feedKey] || FEED_URLS.tech;
   log(`Fetching: ${feedUrl}`, 'info');
   const articles = await fetchRSS(feedUrl);
@@ -1098,7 +1118,7 @@ async function runFlow(){
     link: item.link || '',
   }));
   log(`✓ ${feed.length} articles fetched from RSS feed`, 'success');
-  document.getElementById('sF').textContent=feed.length;
+  (document.getElementById('sF') || {}).textContent =feed.length;
 
   setPipe(2);
   log(`Running AI quality filter on ${feed.length} articles...`,'info');
@@ -1128,7 +1148,7 @@ async function runFlow(){
         await sleep(400);
         item.post = makePost(item);
         gc++;
-        document.getElementById('sG').textContent = gc;
+        (el => el && (el.textContent = gc))(document.getElementById('sG'));
       }
     } else {
       item.status = 'fail';
@@ -1137,8 +1157,8 @@ async function runFlow(){
 
     scores.push(scoreResult.score);
     S.items.push(item);
-    document.getElementById('sP').textContent = passed;
-    document.getElementById('sA').textContent = (scores.reduce((a,b)=>a+b,0)/scores.length*100).toFixed(0);
+    (el => el && (el.textContent = passed))(document.getElementById('sP'));
+    (el => el && (el.textContent = (scores.reduce((a,b)=>a+b,0)/scores.length*100).toFixed(0)))(document.getElementById('sA'));
     render();
   }
   log(`Filter complete — ${passed}/${feed.length} passed | ${gc} posts generated`,'success');
@@ -1157,7 +1177,7 @@ async function genSingle(idx){
   log(`Writing ${S.style} post for: "${S.items[idx].title.substring(0,38)}..."`,'info');
   await sleep(500);
   S.items[idx].post=makePost(S.items[idx]);
-  document.getElementById('sG').textContent=(parseInt(document.getElementById('sG').textContent)||0)+1;
+  (document.getElementById('sG') || {}).textContent =(parseInt(document.getElementById('sG')?.textContent)||0)+1;
   log('✓ Post ready','success');render();
 }
 
@@ -1195,7 +1215,7 @@ function render(){
     return;
   }
 
-  const author=document.getElementById('authorN').value||'You';
+  const author=document.getElementById('authorN')?.value||'You';
   const init=author.charAt(0).toUpperCase();
 
   list.innerHTML=items.map(item=>{
@@ -1237,7 +1257,7 @@ let selectedStyle = "educational";
 let selectedFeed  = "https://techcrunch.com/feed/";
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
-function getApiKey(){ return document.getElementById("apiKey").value.trim(); }
+function getApiKey(){ const el = document.getElementById("apiKey"); return el ? el.value.trim() : ""; }
 
 async function callClaude(prompt){
   const key = getApiKey();
@@ -1327,15 +1347,9 @@ function fallbackPost(title, desc){
 
 // ── MAIN WORKFLOW ─────────────────────────────────────────────────────────────
 async function launchAutomation(){
-  const key = getApiKey();
   const btn = document.getElementById("launchBtn");
   const ic  = document.getElementById("lIcon");
   const tx  = document.getElementById("lTxt");
-
-  if(!key){
-    alert("Please enter your Claude API key first!");
-    return;
-  }
 
   btn.disabled = true;
   ic.innerHTML = '<span style="animation:spin 0.6s linear infinite;display:inline-block">⟳</span>';
@@ -1345,33 +1359,57 @@ async function launchAutomation(){
   container.innerHTML = "";
   document.getElementById("generatedPosts").innerHTML = "";
 
-  const thresh = parseFloat(document.getElementById("thresh").value);
+  const thresh = parseFloat(document.getElementById('thresh')?.value);
 
   console.log("Automation Started — fetching:", selectedFeed);
 
   try {
-    const maxCount = parseInt(document.getElementById("maxF").value) || 5;
+    const maxCount = parseInt(document.getElementById('maxF')?.value) || 5;
 
     // Try NewsAPI first (real news), fallback to rss2json
     let articles = await fetchFromNewsAPI(maxCount);
 
     if(!articles){
-      console.log("NewsAPI not available — using rss2json");
-      const api = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(selectedFeed);
-      const response = await fetch(api);
-      const data = await response.json();
-      console.log("RSS Data:", data);
-      articles = data.items.slice(0, maxCount).map(item => ({
-        title:   item.title || "Untitled",
-        summary: (item.description || "").replace(/<[^>]+>/g,"").substring(0,300),
-        date:    item.pubDate ? new Date(item.pubDate).toLocaleDateString("en",{month:"short",day:"numeric"}) : "Recent",
-        src:     item.author || selectedFeed.split("/")[2],
-        link:    item.link || ""
-      }));
+      console.log("NewsAPI not available — trying RSS proxies");
+      const feedUrl = selectedFeed || "https://techcrunch.com/feed/";
+
+      // Try multiple RSS proxy services
+      const proxies = [
+        "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(feedUrl),
+        "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(feedUrl) + "&api_key=",
+        "https://rss2json.com/api.json?rss_url=" + encodeURIComponent(feedUrl),
+      ];
+
+      let data = null;
+      for(const proxy of proxies){
+        try {
+          const r = await fetch(proxy, {mode: "cors"});
+          const d = await r.json();
+          if(d.items && d.items.length > 0){ data = d; console.log("Proxy worked:", proxy); break; }
+        } catch(e){ console.log("Proxy failed:", proxy, e.message); }
+      }
+
+      if(!data || !data.items){
+        // Use hardcoded sample articles as last resort
+        console.log("All proxies failed — using sample articles");
+        articles = [
+          { title: "AI is transforming the way businesses operate in 2025", summary: "Artificial intelligence continues to reshape industries, with companies reporting 40% productivity gains. Leaders who adapt early are seeing significant competitive advantages.", date: "Today", src: "Tech News", link: "#" },
+          { title: "The future of remote work: What leaders need to know", summary: "New research shows hybrid work models increase employee satisfaction by 35%. Companies embracing flexibility are attracting top talent in competitive markets.", date: "Today", src: "Business Weekly", link: "#" },
+          { title: "5 strategies for building high-performance teams in 2025", summary: "Top executives share their playbook for developing talent, fostering innovation, and maintaining culture in distributed organizations.", date: "Today", src: "Leadership Today", link: "#" },
+        ];
+      } else {
+        articles = data.items.slice(0, maxCount).map(item => ({
+          title:   item.title || "Untitled",
+          summary: (item.description || "").replace(/<[^>]+>/g,"").substring(0,300),
+          date:    item.pubDate ? new Date(item.pubDate).toLocaleDateString("en",{month:"short",day:"numeric"}) : "Recent",
+          src:     item.author || feedUrl.split("/")[2],
+          link:    item.link || ""
+        }));
+      }
     }
     let passed = 0, generated = 0;
 
-    document.getElementById("sF").textContent = articles.length;
+    (el => el && (el.textContent = articles.length))(document.getElementById('sF'));
 
     for(const item of articles){
       const title = item.title || "";
@@ -1428,11 +1466,11 @@ async function launchAutomation(){
         approveBtn.style.opacity = "0.6";
 
         passed++;
-        document.getElementById("sP").textContent = passed;
+        (el => el && (el.textContent = passed))(document.getElementById('sP'));
 
         const postText = await aiGeneratePost(title, desc);
         generated++;
-        document.getElementById("sG").textContent = generated;
+        (el => el && (el.textContent = generated))(document.getElementById('sG'));
 
         // Show post card
         const postCard  = document.createElement("div");
@@ -1440,7 +1478,7 @@ async function launchAutomation(){
         postCard.style.marginTop = "12px";
         postCard.style.animation = "slideIn 0.4s ease both";
 
-        const authorName = document.getElementById("authorN").value || "You";
+        const authorName = document.getElementById('authorN')?.value || "You";
         const hdrEl = document.createElement("div");
         hdrEl.className = "li-hdr";
         hdrEl.innerHTML =
@@ -1512,7 +1550,7 @@ async function launchAutomation(){
 
       // Update avg score
       const allScores = [...document.querySelectorAll(".score-ring")].map(el => parseInt(el.textContent) || 0);
-      document.getElementById("sA").textContent = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length);
+      (el => el && (el.textContent = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length)))(document.getElementById('sA'));
     }
 
     console.log("Done! Passed:", passed, "Generated:", generated);
@@ -1538,8 +1576,8 @@ async function testAPIs(){
   result.textContent = "Testing...";
   result.style.color = "var(--orbit)";
 
-  const claudeKey = document.getElementById("apiKey").value.trim();
-  const newsKey   = document.getElementById("newsApiKey").value.trim();
+  const claudeKey = document.getElementById("apiKey")?.value?.trim() || "";
+  const newsKey   = document.getElementById('newsApiKey')?.value.trim();
 
   let msgs = [];
 
@@ -1565,7 +1603,7 @@ async function testAPIs(){
 
 // ── NEWSAPI FETCH ─────────────────────────────────────────────────────────────
 async function fetchFromNewsAPI(maxCount){
-  const key = document.getElementById("newsApiKey").value.trim();
+  const key = document.getElementById('newsApiKey')?.value.trim();
   if(!key) return null;
 
   const query = selectedFeed.includes("techcrunch") ? "technology" :
@@ -1709,10 +1747,10 @@ async function saveLinkedInToken(){
   window._liUrn   = urn;
   window._liName  = name;
 
-  document.getElementById("liName").textContent   = name;
-  document.getElementById("liAvatar").textContent = name.charAt(0).toUpperCase();
-  document.getElementById("liNotConnected").style.display = "none";
-  document.getElementById("liConnected").style.display    = "block";
+  (el => el && (el.textContent = name))(document.getElementById('liName'));
+  (el => el && (el.textContent = name.charAt(0).toUpperCase()))(document.getElementById('liAvatar'));
+  (el => el && (el.style.display = "none"))(document.getElementById('liNotConnected'));
+  (el => el && (el.style.display = "block"))(document.getElementById('liConnected'));
   document.getElementById("liModal")?.remove();
 
   console.log("Connected:", name, urn ? "with URN" : "without URN");
@@ -1721,8 +1759,8 @@ async function saveLinkedInToken(){
 function disconnectLinkedIn(){
   window._liToken = "";
   window._liName  = "";
-  document.getElementById("liNotConnected").style.display = "block";
-  document.getElementById("liConnected").style.display    = "none";
+  (el => el && (el.style.display = "block"))(document.getElementById('liNotConnected'));
+  (el => el && (el.style.display = "none"))(document.getElementById('liConnected'));
 }
 
 
@@ -1822,10 +1860,14 @@ function toggleScheduler(){
 }
 
 function startScheduler(){
-  stopScheduler(); // clear any old interval
-  checkSchedule(); // check immediately
-  schedulerIntervalId = setInterval(checkSchedule, 60000); // check every minute
-  console.log("Scheduler started");
+  stopScheduler();
+  const mins = parseInt(document.getElementById("postInterval")?.value || "5");
+  const ms   = mins * 60 * 1000;
+  runScheduledPost("⚡ Auto"); // run immediately
+  schedulerIntervalId = setInterval(()=> runScheduledPost("⚡ Auto"), ms);
+  const sta = document.getElementById("schedulerStatus");
+  if(sta){ sta.textContent = "● Running — every " + mins + " min"; sta.style.color = "var(--nova)"; }
+  console.log("Scheduler started — every", mins, "minutes");
 }
 
 function stopScheduler(){
@@ -1841,8 +1883,8 @@ function checkSchedule(){
   const mm      = String(now.getMinutes()).padStart(2,"0");
   const current = hh + ":" + mm;
 
-  const morning = document.getElementById("morningTime").value;
-  const evening = document.getElementById("eveningTime").value;
+  const morning = document.getElementById("morningTime")?.value || "09:00";
+  const evening = document.getElementById("eveningTime")?.value || "18:00";
 
   const sta = document.getElementById("schedulerStatus");
 
@@ -1880,53 +1922,100 @@ async function runScheduledPost(slot){
   const sta = document.getElementById("schedulerStatus");
 
   try {
-    // 1. Fetch RSS
-    const maxCount = parseInt(document.getElementById("maxF").value) || 5;
-    const api = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(selectedFeed);
-    const res  = await fetch(api);
-    const data = await res.json();
-    const items = data.items.slice(0, maxCount);
+    sta.textContent = "● Fetching articles...";
+    sta.style.color = "var(--orbit)";
 
-    // 2. Find best article using AI filter
+    const maxCount = parseInt(document.getElementById('maxF')?.value) || 5;
+
+    // Try NewsAPI first, then rss2json
+    let items = await fetchFromNewsAPI(maxCount);
+
+    if(!items || items.length === 0){
+      // Fallback to rss2json
+      const feedUrl = selectedFeed || "https://techcrunch.com/feed/";
+      const api = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(feedUrl);
+      const res  = await fetch(api);
+      if(!res.ok) throw new Error("RSS fetch failed: " + res.status);
+      const data = await res.json();
+      if(!data.items || data.items.length === 0) throw new Error("No articles found");
+      items = data.items.slice(0, maxCount).map(i => ({
+        title:   i.title || "Untitled",
+        summary: (i.description || "").replace(/<[^>]+>/g,"").substring(0,300),
+        link:    i.link || ""
+      }));
+    }
+
+    sta.textContent = "● Filtering " + items.length + " articles...";
+
+    // Pick best article using fallback score (no Claude needed)
     let bestItem = null, bestScore = 0;
     for(const item of items){
       const title = item.title || "";
-      const desc  = (item.description || "").replace(/<[^>]+>/g,"").substring(0,300);
-      const {score} = await aiFilter(title, desc);
-      if(score > bestScore){ bestScore = score; bestItem = {title, desc, link: item.link}; }
+      const desc  = item.summary || item.description || "";
+      const score = fallbackFilter(title, desc);
+      if(score > bestScore){ bestScore = score; bestItem = {title, desc: desc.substring(0,300), link: item.link}; }
     }
 
-    if(!bestItem || bestScore < 0.5){
-      sta.textContent = "● No quality article found";
+    if(!bestItem){
+      sta.textContent = "● No articles found";
       sta.style.color = "var(--orbit)";
       return;
     }
 
-    // 3. Generate post
-    const postText = await aiGeneratePost(bestItem.title, bestItem.desc);
+    sta.textContent = "● Generating post...";
 
-    // 4. Full Auto OR Preview
+    // Generate post using fallback (no Claude needed)
+    const postText = fallbackPost(bestItem.title, bestItem.desc);
+
+    // Full Auto OR Preview
     const fullAuto = document.getElementById("fullAutoPost")?.checked;
 
     if(fullAuto){
-      // Direct post — no popup
       sta.textContent = "● Auto posting...";
       sta.style.color = "var(--orbit)";
-      const fakeBtn = { disabled: false, textContent: "" };
-      await postToLinkedIn(postText, fakeBtn);
-      sta.textContent = "● Auto posted! ✅";
-      sta.style.color = "var(--nova)";
-      console.log("Auto posted:", bestItem.title);
+
+      const backendUrl = document.getElementById("backendUrl")?.value?.trim();
+      const liToken    = window._liToken || "";
+      const liUrn      = window._liUrn   || "";
+
+      if(backendUrl && liToken && liUrn){
+        // Use backend — real auto post!
+        try {
+          const r = await fetch(backendUrl + "/api/post", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: liToken, personUrn: liUrn, text: postText })
+          });
+          const d = await r.json();
+          if(d.success){
+            sta.textContent = "● Posted! ✅ " + new Date().toLocaleTimeString();
+            sta.style.color = "var(--nova)";
+            console.log("Auto posted via backend:", d.postId);
+          } else {
+            sta.textContent = "● Error: " + (d.error || "Unknown");
+            sta.style.color = "#ff4455";
+          }
+        } catch(e){
+          sta.textContent = "● Backend error: " + e.message;
+          sta.style.color = "#ff4455";
+        }
+      } else {
+        // No backend — open share popup
+        const text = encodeURIComponent(postText.substring(0, 700));
+        window.open("https://www.linkedin.com/sharing/share-offsite/?text=" + text, "_blank", "width=600,height=600");
+        sta.textContent = "● Share popup opened! ✅ " + new Date().toLocaleTimeString();
+        sta.style.color = "var(--nova)";
+        if(!backendUrl) console.log("Tip: Add backend URL for fully automatic posting!");
+      }
     } else {
-      // Show preview popup
-      showPreviewPopup(slot, bestItem.title, postText, bestScore);
+      showPreviewPopup(slot, bestItem.title, postText, bestScore/100);
       sta.textContent = "● Waiting for approval...";
       sta.style.color = "var(--orbit)";
     }
 
   } catch(err){
     console.error("Scheduler error:", err);
-    sta.textContent = "● Error — check console";
+    sta.textContent = "● Error: " + err.message;
     sta.style.color = "#ff4455";
   }
 }
@@ -1982,8 +2071,8 @@ function showPreviewPopup(slot, articleTitle, postText, score){
     this.disabled = true;
     await postToLinkedIn(postText, this);
     document.getElementById("schedulePopup")?.remove();
-    document.getElementById("schedulerStatus").textContent = "● Posted! ✅";
-    document.getElementById("schedulerStatus").style.color = "var(--nova)";
+    (el => el && (el.textContent = "● Posted! ✅"))(document.getElementById('schedulerStatus'));
+    (el => el && (el.style.color = "var(--nova)"))(document.getElementById('schedulerStatus'));
   };
 
   // Auto-close countdown
