@@ -508,16 +508,18 @@ input:checked ~ .toggle-dot{transform:translateX(18px);background:var(--nova);bo
         <button class="feed-cat active" onclick="filterFeeds('all',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(0,212,255,0.3);background:rgba(0,212,255,0.1);color:var(--glow);cursor:pointer;font-family:inherit">All</button>
         <button class="feed-cat" onclick="filterFeeds('tech',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">⚡ Tech</button>
         <button class="feed-cat" onclick="filterFeeds('ai',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">🧠 AI</button>
-        <button class="feed-cat" onclick="filterFeeds('biz',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">💼 Biz</button>
-        <button class="feed-cat" onclick="filterFeeds('mkt',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">📈 Mktg</button>
-        <button class="feed-cat" onclick="filterFeeds('fin',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">💰 Finance</button>
       </div>
 
       <div id="feedBtns">
         <!-- TECH -->
         <button class="feed-item-btn active" data-cat="tech" onclick="pickFeed(this,'tech')">
-          <span class="fi-icon">⚡</span>
-          <div><div class="fi-name">TechCrunch</div><div class="fi-url">techcrunch.com/feed</div></div>
+          <span class="fi-icon">🔶</span>
+          <div><div class="fi-name">Hacker News Top</div><div class="fi-url">hnrss.org/frontpage</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="tech" onclick="pickFeed(this,'hn')">
+          <span class="fi-icon">⭐</span>
+          <div><div class="fi-name">HN Best Stories</div><div class="fi-url">hnrss.org/best</div></div>
           <span class="fi-live">LIVE</span>
         </button>
         <button class="feed-item-btn" data-cat="tech" onclick="pickFeed(this,'wired')">
@@ -530,15 +532,15 @@ input:checked ~ .toggle-dot{transform:translateX(18px);background:var(--nova);bo
           <div><div class="fi-name">The Verge</div><div class="fi-url">theverge.com/rss</div></div>
           <span class="fi-live">LIVE</span>
         </button>
-        <button class="feed-item-btn" data-cat="tech" onclick="pickFeed(this,'hn')">
-          <span class="fi-icon">🔶</span>
-          <div><div class="fi-name">Hacker News</div><div class="fi-url">hnrss.org/frontpage</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
         <!-- AI -->
         <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'ai')">
           <span class="fi-icon">🧠</span>
-          <div><div class="fi-name">O'Reilly Radar</div><div class="fi-url">oreilly.com/radar</div></div>
+          <div><div class="fi-name">HN — AI & ML</div><div class="fi-url">hnrss.org · AI filter</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'aitools')">
+          <span class="fi-icon">⚡</span>
+          <div><div class="fi-name">HN — LLMs & Tools</div><div class="fi-url">hnrss.org · LLM filter</div></div>
           <span class="fi-live">LIVE</span>
         </button>
         <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'mit')">
@@ -549,64 +551,6 @@ input:checked ~ .toggle-dot{transform:translateX(18px);background:var(--nova);bo
         <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'deepmind')">
           <span class="fi-icon">🤖</span>
           <div><div class="fi-name">DeepMind Blog</div><div class="fi-url">deepmind.google</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'openai')">
-          <span class="fi-icon">✨</span>
-          <div><div class="fi-name">OpenAI Blog</div><div class="fi-url">openai.com/blog</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <!-- BUSINESS -->
-        <button class="feed-item-btn" data-cat="biz" onclick="pickFeed(this,'hbr')">
-          <span class="fi-icon">💼</span>
-          <div><div class="fi-name">Harvard Business Review</div><div class="fi-url">hbr.org</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <button class="feed-item-btn" data-cat="biz" onclick="pickFeed(this,'forbes')">
-          <span class="fi-icon">🏆</span>
-          <div><div class="fi-name">Forbes Innovation</div><div class="fi-url">forbes.com</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <button class="feed-item-btn" data-cat="biz" onclick="pickFeed(this,'fastco')">
-          <span class="fi-icon">⚡</span>
-          <div><div class="fi-name">Fast Company</div><div class="fi-url">fastcompany.com</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <button class="feed-item-btn" data-cat="biz" onclick="pickFeed(this,'entrepreneur')">
-          <span class="fi-icon">🚀</span>
-          <div><div class="fi-name">Entrepreneur</div><div class="fi-url">entrepreneur.com</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <!-- MARKETING -->
-        <button class="feed-item-btn" data-cat="mkt" onclick="pickFeed(this,'marketing')">
-          <span class="fi-icon">📈</span>
-          <div><div class="fi-name">Moz Blog</div><div class="fi-url">moz.com/blog</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <button class="feed-item-btn" data-cat="mkt" onclick="pickFeed(this,'hubspot')">
-          <span class="fi-icon">🎯</span>
-          <div><div class="fi-name">HubSpot Marketing</div><div class="fi-url">hubspot.com/blog</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <button class="feed-item-btn" data-cat="mkt" onclick="pickFeed(this,'contentmkt')">
-          <span class="fi-icon">✍️</span>
-          <div><div class="fi-name">Content Marketing Inst.</div><div class="fi-url">contentmarketinginstitute.com</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <!-- FINANCE -->
-        <button class="feed-item-btn" data-cat="fin" onclick="pickFeed(this,'bloomberg')">
-          <span class="fi-icon">💹</span>
-          <div><div class="fi-name">Bloomberg Tech</div><div class="fi-url">bloomberg.com</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <button class="feed-item-btn" data-cat="fin" onclick="pickFeed(this,'wsj')">
-          <span class="fi-icon">📰</span>
-          <div><div class="fi-name">Wall Street Journal</div><div class="fi-url">wsj.com</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <button class="feed-item-btn" data-cat="fin" onclick="pickFeed(this,'coindesk')">
-          <span class="fi-icon">₿</span>
-          <div><div class="fi-name">CoinDesk</div><div class="fi-url">coindesk.com</div></div>
           <span class="fi-live">LIVE</span>
         </button>
       </div>
@@ -1057,29 +1001,17 @@ Agree? Or am I wrong about where the value actually concentrates first?
 
 // ── RSS FEED URLs ─────────────────────────────────────────────────────────────
 const FEED_URLS={
-  // Tech & Startups — high quality, CORS friendly
+  // ⚡ TECH
   tech:       'https://hnrss.org/frontpage',
+  hn:         'https://hnrss.org/best',
   wired:      'https://api.rss2json.com/v1/api.json?rss_url=https://www.wired.com/feed/rss',
   verge:      'https://api.rss2json.com/v1/api.json?rss_url=https://www.theverge.com/rss/index.xml',
-  hn:         'https://hnrss.org/best',
 
-  // AI & Research — best sources
+  // 🧠 AI
   ai:         'https://hnrss.org/frontpage?q=AI+machine+learning',
+  aitools:    'https://hnrss.org/frontpage?q=LLM+GPT+Claude+AI+tools',
   mit:        'https://api.rss2json.com/v1/api.json?rss_url=https://www.technologyreview.com/feed/',
   deepmind:   'https://api.rss2json.com/v1/api.json?rss_url=https://deepmind.google/blog/rss.xml',
-
-  // Business & Leadership
-  hbr:        'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.feedburner.com/harvardbusiness',
-  forbes:     'https://api.rss2json.com/v1/api.json?rss_url=https://www.forbes.com/innovation/feed2',
-  inc:        'https://api.rss2json.com/v1/api.json?rss_url=https://www.inc.com/rss',
-
-  // Marketing & Growth
-  marketing:  'https://api.rss2json.com/v1/api.json?rss_url=https://blog.hubspot.com/marketing/rss.xml',
-  hubspot:    'https://api.rss2json.com/v1/api.json?rss_url=https://feeds.feedburner.com/moz/randfish',
-
-  // Finance & Crypto
-  bloomberg:  'https://hnrss.org/frontpage?q=finance+economy',
-  coindesk:   'https://api.rss2json.com/v1/api.json?rss_url=https://www.coindesk.com/arc/outboundfeeds/rss/',
 };
 
 // ── RSS FETCH FUNCTION ────────────────────────────────────────────────────────
@@ -1220,24 +1152,53 @@ function makePost(item){
   const kw  = words.filter(w => w.length > 4 && !stopwords.includes(w));
   const topic = (kw.slice(0,3).join(' ') || 'AI and tech').replace(/[^a-z0-9 ]/g,'');
 
-  // ── HASHTAG SETS (Tech/AI optimized) ─────────────────────────────────────
+  // ── HASHTAG SETS — 3 rotating sets per feed ─────────────────────────────
   const hashSets = {
-    tech:      '#AI #TechLeadership #Innovation #FutureOfWork #BuildingInPublic',
-    wired:     '#Tech #Innovation #AITrends #DigitalStrategy #FutureOfWork',
-    verge:     '#Tech #AITools #Innovation #DigitalTransformation #FutureOfTech',
-    hn:        '#BuildingInPublic #StartupLife #SoftwareEngineering #TechFounders #IndieHacker',
-    ai:        '#GenerativeAI #AIEngineering #LLMs #MachineLearning #AIProductManagement',
-    mit:       '#AIResearch #DeepTech #MachineLearning #TechInnovation #FutureOfAI',
-    deepmind:  '#DeepLearning #AIResearch #NeuralNetworks #AGI #FutureOfAI',
-    hbr:       '#TechLeadership #AIStrategy #ProductManagement #EngineeringManagement #GrowthMindset',
-    forbes:    '#TechEntrepreneurship #AIStartups #VentureCapital #Innovation #TechFounders',
-    inc:       '#StartupLife #TechFounders #BuildingInPublic #SaaSGrowth #ProductLed',
-    marketing: '#GrowthMarketing #AIMarketing #ProductLed #B2BSaaS #MarketingTech',
-    hubspot:   '#ContentMarketing #SEO #AIMarketing #InboundMarketing #GrowthHacking',
-    bloomberg: '#TechEconomy #AIInvesting #VentureCapital #TechMarkets #StartupEcosystem',
-    coindesk:  '#Web3 #Blockchain #DeFi #CryptoTech #AIxCrypto',
+    tech:     ['#GenerativeAI #AIEngineering #BuildingInPublic #FutureOfWork #TechLeadership',
+               '#MachineLearning #SoftwareEngineering #AITools #DevEx #ShipIt',
+               '#AIFirst #TechStrategy #EngineeringCulture #Innovation #AITrends'],
+    wired:    ['#TechTrends #AIStrategy #DigitalTransformation #FutureOfTech #Innovation',
+               '#AI #Technology #TechNews #ProductThinking #TechLeadership',
+               '#BigTech #AIPolicy #FutureOfWork #TechInnovation #DigitalStrategy'],
+    verge:    ['#ConsumerTech #AIProducts #TechNews #Innovation #FutureOfTech',
+               '#AITools #ProductDesign #UX #AppDev #TechReview',
+               '#Tech #Gadgets #AIxDesign #DigitalLife #TechTrends'],
+    hn:       ['#BuildingInPublic #IndieHacker #SideProject #TechFounders #Startup',
+               '#SoftwareEngineering #OSS #DevCommunity #Programming #OpenSource',
+               '#ShipIt #MVP #BootstrappedFounder #HackerNews #BuildInPublic'],
+    ai:       ['#GenerativeAI #LLMs #AIEngineering #PromptEngineering #MachineLearning',
+               '#AIProductManagement #GenAI #AIStrategy #MLOps #LLMOps',
+               '#AIResearch #FoundationModels #AIFirst #DeepLearning #AIApplications'],
+    mit:      ['#AIResearch #DeepTech #TechInnovation #FutureOfAI #MachineLearning',
+               '#ComputerScience #ResearchToProduct #AILabs #EmergingTech #DeepLearning',
+               '#ScienceAndTech #AIPolicy #TechForGood #FutureOfWork #Innovation'],
+    deepmind: ['#DeepLearning #AGI #AIResearch #NeuralNetworks #FrontierAI',
+               '#AIAlignment #MachineLearning #AIBreakthroughs #FutureOfAI #AILabs',
+               '#ReinforcementLearning #ComputerVision #NLP #AIxScience #MLResearch'],
+    hbr:      ['#TechLeadership #EngineeringManagement #AIStrategy #ProductManagement #FutureOfWork',
+               '#PeopleManagement #OrgDesign #TechCulture #TeamBuilding #LeadershipDevelopment',
+               '#GrowthMindset #CareerGrowth #Leadership #Innovation #ManagementTips'],
+    forbes:   ['#TechEntrepreneurship #AIStartups #TechFounders #VentureCapital #StartupGrowth',
+               '#Entrepreneurship #Innovation #TechBusiness #ScaleUp #GrowthStrategy',
+               '#StartupLife #Founder #TechIndustry #AIBusiness #BusinessStrategy'],
+    inc:      ['#StartupLife #BuildingInPublic #SaaSGrowth #TechFounders #ProductLed',
+               '#Entrepreneurship #SmallBusiness #GrowthHacking #ScaleUp #StartupAdvice',
+               '#BootstrappedFounder #IndieHacker #B2BSaaS #StartupMarketing #Founder'],
+    marketing:['#AIMarketing #GrowthMarketing #ProductLedGrowth #B2BSaaS #MarketingStrategy',
+               '#ContentMarketing #DemandGeneration #GTMStrategy #MarketingOps #SalesMarketing',
+               '#DigitalMarketing #MarTech #GrowthHacking #MarketingAnalytics #B2BMarketing'],
+    hubspot:  ['#InboundMarketing #ContentStrategy #SEO #MarketingAutomation #HubSpot',
+               '#ContentMarketing #LeadGeneration #SalesEnablement #CRM #MarketingROI',
+               '#GrowthMarketing #B2BMarketing #EmailMarketing #ConversionOptimization #MarTech'],
+    bloomberg:['#TechEconomy #VentureCapital #TechMarkets #StartupEcosystem #AIInvesting',
+               '#BigTech #TechPolicy #Innovation #TechIPO #FutureOfFinance',
+               '#TechBusiness #MarketTrends #VC #TechStocks #StartupFunding'],
+    coindesk: ['#Web3 #Blockchain #DeFi #CryptoTech #AIxCrypto',
+               '#Bitcoin #Ethereum #Crypto #Web3Dev #BlockchainDevelopment',
+               '#DeFi #CryptoInvesting #Web3Community #NFT #DigitalAssets'],
   };
-  const hashtags = hashSets[S.feedKey] || '#AI #Innovation #FutureOfWork #TechLeadership #BuildingInPublic';
+  const hashArr = hashSets[S.feedKey] || ['#AI #Innovation #FutureOfWork #TechLeadership #BuildingInPublic'];
+  const hashtags = hashArr[new Date().getDate() % hashArr.length];
   const cta     = document.getElementById('inclCta')?.checked;
   const ctaLine = cta ? '\n\nWhat\'s your experience with this? Drop your thoughts below 👇' : '';
   const ending  = '\n\n' + hashtags;
@@ -1274,41 +1235,100 @@ function makePost(item){
   const src     = item.src || item.link || '';
 
   if(S.style === 'authority'){
+    const authBodies = [
+      `${summary}
+
+Most people see the surface-level change. Very few see what's driving it underneath.
+
+The teams that will look back at this moment as their turning point aren't the ones with the biggest budgets. They're the ones who stopped waiting for certainty and started building with conviction.
+
+The window is open. It won't be forever.`,
+
+      `${summary}
+
+Here's the part that doesn't make the headlines:
+
+The real competitive advantage isn't the technology. It's the decision-making speed of teams that already understand it deeply.
+
+By the time this becomes obvious to everyone, the early movers will have an 18-month head start. That gap is almost impossible to close.`,
+
+      `${summary}
+
+I keep seeing the same mistake — teams treating this as a tool to adopt rather than a shift to understand.
+
+The difference between those two framings determines everything: the questions you ask, the systems you build, the talent you attract.
+
+Get the framing right first. The execution follows naturally.`,
+    ];
     return `${pick(authorityHooks)}
 
-${summary}
-
-This is not a slow trend. It's a structural shift happening right now — and most teams are still operating on 2022 assumptions.
-
-The engineers and product builders who recognize this early won't just adapt faster. They'll define what the next wave looks like.
-
-The window to build conviction here is smaller than most roadmaps suggest.${ctaLine}${ending}`;
+${authBodies[new Date().getDate() % authBodies.length]}${ctaLine}${ending}`;
   }
 
   if(S.style === 'educational'){
+    const eduBodies = [
+      `${summary}
+
+Here's the 3-layer breakdown most articles miss:
+
+→ Layer 1 (visible): The tool or trend everyone's discussing
+→ Layer 2 (important): How it changes team workflows and incentives
+→ Layer 3 (critical): What it means for how you hire, build, and compete in 12 months
+
+Most people stop at Layer 1. The builders winning right now are operating at Layer 3.`,
+
+      `${summary}
+
+What this actually changes (in order of impact):
+
+1. How fast you can validate assumptions — weeks become days
+2. How small your team needs to be to ship something meaningful
+3. What "senior" even means when junior devs can move this fast
+
+The teams I've seen thrive have restructured around point 3 first.`,
+
+      `${summary}
+
+The mental model I use to explain this:
+
+Think less "new technology to learn" — think more "new leverage point in the system."
+
+Every leverage point reshuffles who wins and who falls behind. The question is never "should we adopt this?" The question is "what breaks in our current process if we don't?"`,
+    ];
     return `${pick(educationalHooks)}
 
-${summary}
-
-Here's what this actually means for builders and tech teams:
-
-→ The old architecture assumptions don't hold anymore
-→ The teams shipping fastest are the ones who rethought the problem from scratch
-→ The productivity gap between those who get this and those who don't is growing every quarter
-
-This is worth understanding deeply — not just skimming.${ctaLine}${ending}`;
+${eduBodies[new Date().getDate() % eduBodies.length]}${ctaLine}${ending}`;
   }
 
   if(S.style === 'opinion'){
+    const opBodies = [
+      `${summary}
+
+The mainstream take: "interesting development, worth watching."
+
+My take: this is the kind of shift that looks obvious in hindsight and invisible in the moment. We've been here before — cloud, mobile, open source. Each time, the people who dismissed the early signals had very convincing reasons.
+
+The second-order effects here are being almost completely ignored. And that's exactly where the real story is.`,
+
+      `${summary}
+
+What I keep noticing in every conversation about this:
+
+People are asking "how do we use this?" before asking "do we understand this?"
+
+The teams who get burned aren't the ones who move slowly. They're the ones who move fast with the wrong mental model. Rushing into this without a clear framework is how you build technical debt you can't see yet.`,
+
+      `${summary}
+
+The narrative needs updating. Here's what I'd change:
+
+Stop framing this as a productivity story. It's an organizational design story.
+
+The teams that will look back and say "we got this right" won't be the ones that adopted the fastest. They'll be the ones that redesigned how decisions get made, how work gets structured, and what outcomes they were actually optimizing for.`,
+    ];
     return `${pick(opinionHooks)}
 
-${summary}
-
-The mainstream narrative is focused on surface-level implications. What nobody's discussing is the second-order effect — how this reshapes incentives, tooling, and what "good engineering" even means.
-
-We're pattern-matching to past tech cycles. But this one is structurally different.
-
-I could be wrong. I'd rather be challenged early than be quietly right later.${ctaLine}${ending}`;
+${opBodies[new Date().getDate() % opBodies.length]}${ctaLine}${ending}`;
   }
 
   // Default
