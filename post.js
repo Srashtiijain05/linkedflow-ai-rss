@@ -82,162 +82,700 @@ function generatePost(article, style) {
   const { title, desc } = article;
   const day  = new Date().getDate();
   const pick = arr => arr[day % arr.length];
-  const tags = getHashtags(title, desc);
+  const txt  = (title + ' ' + desc).toLowerCase();
 
-  const authorityHooks = [
-    "This is one of those shifts most people will understand too late:",
-    "The part of this story nobody is talking about:",
-    "Most takes on this are wrong. Here's what's actually happening:",
-    "I keep watching smart teams make the same mistake here:",
-    "This landed differently than I expected. Worth slowing down on:",
-  ];
-  const eduHooks = [
-    "Most people are using this wrong. Here's the right mental model:",
-    "Nobody explained this clearly when it came out. Let me fix that:",
-    "I spent a week going deep on this. Three things I wish I'd known:",
-    "Here's the part that actually matters (the coverage missed it):",
-  ];
-  const opinionHooks = [
-    "The hot take nobody wants to publish because it makes everyone uncomfortable:",
-    "Everyone is celebrating this. I think we're celebrating the wrong thing:",
-    "Unpopular opinion that I'll stand behind:",
-    "The consensus on this is wrong. Here's the more honest read:",
-  ];
-  const storyOpeners = [
-    "A developer just shared something that stopped me mid-scroll.",
-    "Someone posted a demo this week and I genuinely couldn't believe it was real.",
-    "This landed in my feed today and I've been thinking about it since.",
-    "A researcher shared something quietly this week. It deserved way more attention.",
-  ];
+  // ── TOPIC DETECTION ───────────────────────────────────────────────────────
+  const isLeadership = txt.includes('leader') || txt.includes('manag') || txt.includes('team') || txt.includes('psycholog') || txt.includes('culture') || txt.includes('communication') || txt.includes('trust') || txt.includes('organization') || txt.includes('uncertain');
+  const isAIModel    = txt.includes('gpt') || txt.includes('claude') || txt.includes('gemini') || txt.includes('llama') || txt.includes('mistral') || txt.includes('llm') || txt.includes('new model') || txt.includes('open source model');
+  const isAIArch     = txt.includes('architecture') || txt.includes('transformer') || txt.includes('mamba') || txt.includes('moe') || txt.includes('neural network');
+  const isProduct    = txt.includes('product') || txt.includes('startup') || txt.includes('founder') || txt.includes('pmf') || txt.includes('scale') || txt.includes('ship') || txt.includes('user');
+  const isFramework  = txt.includes('framework') || txt.includes('library') || txt.includes('langgraph') || txt.includes('langchain') || txt.includes('dspy') || txt.includes('ollama');
+  const isCareer     = txt.includes('career') || txt.includes('hiring') || txt.includes('skill') || txt.includes('developer') || txt.includes('engineer') || txt.includes('job');
+  const isResearch   = txt.includes('research') || txt.includes('study') || txt.includes('data show') || txt.includes('survey') || txt.includes('500 compan') || txt.includes('companies show');
+  const isGenAI      = isAIModel || isAIArch || (txt.includes('ai') && !isLeadership && !isProduct);
 
-  if (style === 'authority') {
-    const bodies = [
-`${title}.
+  // ── AUDIENCE-FIRST HASHTAGS ───────────────────────────────────────────────
+  let tags = '';
+  if     (isLeadership && isResearch && !isGenAI) tags = '#Leadership #FutureOfWork #OrganizationalCulture #PsychologicalSafety';
+  else if(isLeadership && !isGenAI)               tags = '#Leadership #TechLeadership #FutureOfWork #TeamCulture';
+  else if(isAIModel)                              tags = '#GenerativeAI #AIStrategy #TechLeadership #LLMs';
+  else if(isAIArch)                               tags = '#AIStrategy #GenerativeAI #TechLeadership #DigitalTransformation';
+  else if(isProduct && isGenAI)                   tags = '#AIProduct #ProductThinking #BuildInPublic #GenerativeAI';
+  else if(isProduct)                              tags = '#ProductThinking #StartupLife #BuildInPublic #TechLeadership';
+  else if(isFramework)                            tags = '#AIStrategy #GenerativeAI #BuildInPublic #TechLeadership';
+  else if(isCareer && isGenAI)                    tags = '#AIStrategy #TechCareers #SoftwareEngineering #FutureOfWork';
+  else if(isCareer)                               tags = '#TechCareers #SoftwareEngineering #FutureOfWork #Leadership';
+  else if(isGenAI)                                tags = '#AIStrategy #GenerativeAI #TechLeadership #DigitalTransformation';
+  else                                            tags = '#TechLeadership #Innovation #FutureOfWork #DigitalTransformation';
 
-${desc}
+  // ─────────────────────────────────────────────────────────────────────────
+  // HPC FORMAT — topic-consistent throughout
+  // HOOK   → 1-2 lines. Bold claim. Stops scroll.
+  // PLOT   → Title + desc + bridge lines. SAME topic as hook.
+  // CLIMAX → Sharp insight. ONE closing question. SAME topic.
+  // ─────────────────────────────────────────────────────────────────────────
 
-This isn't an incremental improvement. It's a category shift.
+  if(style === 'authority'){
 
-The teams that recognize the difference between those two things right now will have a 12-month head start on everyone else.
+    if(isLeadership && !isGenAI){
+      const t = [
+`Most leadership advice is written for stable times.
+Almost none of it is written for right now.
 
-→ Your architecture decisions from 6 months ago need revisiting
-→ The "wait and see" strategy just got significantly more expensive
-→ The first-mover advantage in your domain is closing fast
-
-What's the one assumption in your current roadmap this changes?`,
-
-`${title}.
+${title}.
 
 ${desc}
 
-The headline is interesting. The second-order effect is what matters.
+Here's what the research shows about leaders who perform in uncertainty:
 
-Most teams are reacting to what this is. The teams pulling ahead are already designing for what this makes possible next.
+→ They over-communicate context, not just decisions
+→ They create psychological safety before demanding accountability
+→ They separate "what we know" from "what we're betting on" — explicitly
 
-There's a 6-month window where that distinction is worth a lot.
+The leaders who build the most resilient teams aren't the most confident.
+They're the most honest about what they don't know yet.
 
-Are you in the first group or the second?`,
+How clearly does your team understand the difference between your certainties and your bets?`,
 
-`${title}.
+`The data on high-performing teams is consistent.
+Most managers are still ignoring the most important variable.
+
+${title}.
 
 ${desc}
 
-Here's what nobody is saying clearly: this isn't a feature update. It's a new baseline.
+Across 500+ companies, the research finds the same result:
+Psychological safety predicts team performance more reliably than talent, compensation, or process.
 
-What was "impressive" last quarter is now table stakes. The teams that internalized that months ago are already building on top of it.
+Not because safety is soft.
+Because people don't take risks, share bad news, or admit mistakes in unsafe environments.
+And without those three things, no team can learn fast enough.
 
-The gap between those teams and everyone else isn't talent. It's timing.
+The best leaders don't manage performance.
+They architect the conditions where performance becomes inevitable.
 
-How far ahead — or behind — is your current thinking?`,
+What's one thing you could change this week to make your team feel safer to speak up?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    if(isProduct){
+      const t = [
+`Most products don't fail because of bad execution.
+They fail because of good execution on the wrong problem.
+
+${title}.
+
+${desc}
+
+The research is consistent:
+→ 42% of startups fail because there was no market need — not because the product was bad
+→ Teams that talk to users weekly are 3x more likely to reach product-market fit
+→ The top retention signal: would users be "very disappointed" without your product?
+
+The companies that scale aren't the ones who moved fastest.
+They're the ones who got obsessively specific — one user, one problem, one moment.
+
+Who is the one specific person your product exists for?`,
+
+`The best founders aren't the smartest people in the room.
+They're the most specific.
+
+${title}.
+
+${desc}
+
+What separates products that scale from products that stall:
+
+The ones that scale solve one painful problem completely for one specific person.
+The ones that stall solve three medium problems partially for a vague audience.
+
+Specificity isn't a constraint. It's the entire strategy.
+
+What would you stop building if you had to get 10x more specific about who you're building for?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    if(isCareer){
+      const t = [
+`The most in-demand engineers in 2026 aren't the fastest coders.
+They're the clearest thinkers.
+
+${title}.
+
+${desc}
+
+Here's what's actually separating top engineers from everyone else right now:
+
+→ They define the problem before writing a single line of code
+→ They ask "what breaks?" before asking "how do I build it?"
+→ They communicate tradeoffs clearly — upward, downward, sideways
+
+The engineers getting promoted aren't 10x more productive.
+They're 10x more legible to the people around them.
+
+What's one skill outside of coding that would make the biggest difference in your career this year?`,
+
+`The career advice that actually works is never the advice that feels safe.
+
+${title}.
+
+${desc}
+
+What I've seen consistently across hundreds of engineering careers:
+
+The people who grow fastest aren't the ones who execute the best.
+They're the ones who make their thinking visible — in PRs, in meetings, in documentation.
+
+Execution is hard to see. Thinking is impossible to ignore.
+
+The best career move you can make right now isn't learning a new framework.
+It's making your judgment legible to the people who can accelerate your career.
+
+What's one way you could make your thinking more visible this week?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    // AI/tech authority (models, architecture, frameworks)
+    const t = [
+`Most teams are reacting to this.
+The ones pulling ahead are designing for it.
+
+${title}.
+
+${desc}
+
+Think about the timeline:
+
+Six months ago this was an edge case.
+Today it's table stakes.
+In six months, teams without it will be explaining why to their boards.
+
+The difference isn't budget or headcount.
+It's whether they updated their priors when the evidence changed.
+
+What's the one assumption in your current stack this invalidates?`,
+
+`The gap isn't talent.
+The gap is timing.
+
+${title}.
+
+${desc}
+
+The teams that will look smart in 18 months aren't the most resourced.
+They're the ones who rearchitected when the capability changed — not after everyone else did.
+
+What actually shifted:
+→ The performance floor moved — unreliable use cases are now production-ready
+→ The cost curve dropped faster than most financial models assumed
+→ Teams who moved at "early majority" are now competing with "early adopters" who have 12 months of learnings
+
+Is your team building on today's capabilities — or last year's constraints?`
     ];
-    return `${pick(authorityHooks)}\n\n${bodies[day % bodies.length]}\n\n${tags}`;
+    return `${t[day % t.length]}\n\n${tags}`;
   }
 
-  if (style === 'educational') {
-    const bodies = [
-`${title}.
+  if(style === 'educational'){
+
+    if(isLeadership && !isGenAI){
+      const t = [
+`The research on team performance is consistent.
+Most managers are acting on intuition instead.
+
+${title}.
 
 ${desc}
 
-Let me make this concrete:
+Three findings that should change how you run your team:
 
-→ What it replaces: the approach that worked fine until about 6 months ago
-→ What it unlocks: use cases that were too unreliable to ship before
-→ What it doesn't fix: the hard problems that were always about data, not models
+1. Psychological safety predicts innovation output better than any other measured factor
+2. Leaders who share uncertainty openly get higher-quality information from their teams
+3. Weekly 1:1s focused on blockers — not status updates — reduce attrition by 30%
 
-The teams getting the most out of this aren't the ones who adopted fastest. They're the ones who understood the boundaries clearly first.
+None of this is complicated.
+Almost nobody does all three consistently.
 
-Which of those three points changes something in how you're building?`,
+Which one would make the biggest difference in your team right now?`,
 
-`${title}.
+`Nobody teaches leaders how to communicate during uncertainty.
+Here's what the research actually shows works.
+
+${title}.
 
 ${desc}
 
-Three things most teams get wrong here:
+Leaders whose teams perform best in uncertain times do three things differently:
 
-1. Treat it as a drop-in replacement — it's not
-2. Benchmark it on the wrong task and draw the wrong conclusion
-3. Skip evaluation and discover edge cases in production
+→ They separate facts from assumptions — explicitly, out loud, in every key meeting
+→ They ask "what am I missing?" before finalizing decisions
+→ They share bad news faster than good news — because delay costs more than discomfort
 
-The teams doing this well inverted all three. Start with evals. Work backwards from what "good" actually looks like.
+The goal isn't to have all the answers.
+The goal is to create an environment where the right questions surface quickly.
 
-What does good look like for your use case?`,
+What's a piece of bad news your team needs to hear from you sooner?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    if(isProduct){
+      const t = [
+`Nobody teaches product teams how to find the right problem.
+They just say "talk to users" and hope for the best.
+
+${title}.
+
+${desc}
+
+Here's what "talk to users" actually means in practice:
+
+→ Ask about their last frustrating experience — not what features they want
+→ Look for the problem behind the problem they describe first
+→ Find the person who would pay today, not "someday when it has X"
+
+Most teams do interviews. Very few do this.
+The ones that do find their real customer 3x faster.
+
+Which of these is missing from your current discovery process?`,
+
+`The product metrics most teams track are the wrong ones.
+Here's what actually predicts long-term retention.
+
+${title}.
+
+${desc}
+
+Three metrics that separate growing products from stalling ones:
+
+1. Time to first value — not time to first signup (very different things)
+2. Session depth on day 7 — not day 1 activation (anyone can optimize onboarding)
+3. Voluntary referral rate — not NPS (people lie on surveys, they don't lie with referrals)
+
+The metric you optimize for shapes the product you build.
+
+Which metric is quietly misleading your team's decisions right now?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    if(isCareer){
+      const t = [
+`The most valuable skill in tech right now isn't a programming language.
+It's knowing which problems are actually worth solving.
+
+${title}.
+
+${desc}
+
+Before your next sprint, ask three questions:
+
+1. Is this the most important problem right now — or just the most visible?
+2. What breaks if we solve this the wrong way?
+3. Who is the specific person who genuinely wins if we get this exactly right?
+
+The answers will change what you build.
+Almost nobody asks all three before writing the first line of code.
+
+Which question does your team consistently skip?`,
+
+`Great engineers and average engineers use the same tools.
+They ask completely different questions.
+
+${title}.
+
+${desc}
+
+The question average engineers ask: "How do I build this?"
+The question great engineers ask first: "Should we build this at all?"
+
+Then: "What does done actually look like for the person using this?"
+Then: "What's the failure mode we haven't thought through yet?"
+
+Those three questions change everything about execution.
+
+Which question are you skipping most often right now?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    // AI educational
+    const t = [
+`Most AI projects don't fail because of bad models.
+They fail because nobody defined what "good" actually looks like.
+
+${title}.
+
+${desc}
+
+The mental model that changes everything:
+
+Build your evaluation before you build your pipeline.
+Know what "correct" means before you optimize for it.
+Define your failure modes before they define your post-mortem.
+
+Here's the breakdown:
+→ Without evals → guessing if it works
+→ Basic evals → know when it breaks
+→ Good evals → improve systematically, ship with confidence
+
+The teams at level 3 aren't smarter. They just started with evals and built backwards.
+
+Which level is your team at right now?`,
+
+`The difference between an AI demo and an AI product is one thing.
+Not the model. Not the infra. Evals.
+
+${title}.
+
+${desc}
+
+Three things most teams get wrong when shipping AI:
+
+1. Adopt before defining what "success" means for their specific use case
+2. Benchmark on the wrong task and reach the wrong conclusion
+3. Ship before deliberately finding the failure mode
+
+The teams doing this well inverted all three.
+Start with where it breaks. Build backwards from there.
+
+What's the failure mode in your current AI feature you haven't tested yet?`
     ];
-    return `${pick(eduHooks)}\n\n${bodies[day % bodies.length]}\n\n${tags}`;
+    return `${t[day % t.length]}\n\n${tags}`;
   }
 
-  if (style === 'opinion') {
-    const bodies = [
-`${title}.
+  if(style === 'opinion'){
+
+    if(isLeadership && !isGenAI){
+      const t = [
+`Hot take: most leadership development programs are making leaders worse.
+Not better. Actively worse.
+
+${title}.
 
 ${desc}
 
-The uncomfortable version of this story:
+They teach frameworks designed for stable environments.
+But stable environments are the exception now, not the rule.
 
-Most teams aren't behind on this because they lack access. They're behind because they lack clarity on what problem they're actually solving.
+The leaders who actually perform in uncertainty share one trait:
+They're more comfortable saying "I don't know, here's what we're betting on" than reciting any framework they were taught.
 
-Better tools don't fix fuzzy thinking. They just let you be wrong faster and at greater scale.
+Confidence isn't the edge anymore. Clarity is.
 
-The teams winning right now didn't get there by adopting more. They got there by being ruthlessly specific about less.
+What's something your team needs you to be more honest about right now?`,
 
-What's the one problem your team is clearest about?`,
+`Unpopular opinion: psychological safety isn't a "culture initiative."
+It's the most underinvested performance lever in most organizations.
 
-`${title}.
+${title}.
 
 ${desc}
 
-Hot take: we're optimizing for the wrong signal.
+The data is unambiguous. Teams with high psychological safety outperform on every dimension:
+innovation output, retention, speed of problem-solving, quality of decisions.
 
-Speed of adoption isn't the metric. Depth of integration is. Benchmark performance isn't the metric. Reliability on your specific use case is.
+But most organizations still treat it as separate from performance management.
+That's the mistake.
 
-The leaderboard tells you who's winning the benchmark. It doesn't tell you who's building something people actually depend on.
+Safety isn't opposed to accountability.
+Safety is what makes honest accountability possible in the first place.
 
-Those are different competitions. Which one is your team in?`,
+What would your team say if they felt completely safe to say it?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    if(isProduct){
+      const t = [
+`Hot take: "product-market fit" is the most misused phrase in tech.
+Here's what it actually means.
+
+${title}.
+
+${desc}
+
+PMF isn't a metric. It's a moment.
+One specific person who cannot imagine going back to life without your product.
+
+Not "a lot of people kind of like it."
+Not "retention improved last quarter."
+One person. Cannot imagine going back.
+
+If you can't name that person right now — you're still searching.
+And that's okay. But stop calling the search "PMF."
+
+Disagree? Tell me where this breaks.`,
+
+`Unpopular opinion: most startups scale too early.
+Not too slowly. Too early.
+
+${title}.
+
+${desc}
+
+Scaling before you've solved the core problem doesn't accelerate growth.
+It accelerates the discovery of every crack in your foundation — at 10x the cost.
+
+The best time to scale is when your best users are pulling you forward.
+Not when your investors are pushing you forward.
+
+Those are very different forces.
+One is sustainable. One is expensive.
+
+How do you know which one is actually driving your growth right now?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    if(isCareer){
+      const t = [
+`Hot take: most "learn to code" advice is optimizing for the wrong outcome.
+The bottleneck isn't coding. It's judgment.
+
+${title}.
+
+${desc}
+
+The engineers who advance fastest aren't the ones who code the most.
+They're the ones who make the fewest expensive mistakes.
+
+Expensive mistakes come from:
+→ Solving the wrong problem well
+→ Building before understanding the failure mode
+→ Optimizing for what's measurable, not what matters
+
+You can learn syntax in weeks.
+Judgment takes years — unless you're deliberate about building it.
+
+What's the most expensive mistake you've made in the last year, and what did it teach you?`,
+
+`Unpopular opinion: your GitHub commit history is the least interesting thing about you as an engineer.
+
+${title}.
+
+${desc}
+
+The engineers who get the best opportunities share something more important:
+They can explain why they made the decisions they made.
+
+Not just what they built. Why they built it that way.
+What tradeoffs they considered. What they'd do differently.
+
+That's what separates candidates in every interview that matters.
+
+When was the last time you wrote down the reasoning behind a technical decision — not just the decision itself?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    // AI opinion
+    const t = [
+`Hot take: most AI strategies aren't AI strategies.
+They're "we added AI to our existing strategy" strategies.
+
+${title}.
+
+${desc}
+
+The teams winning with AI didn't bolt it on.
+They redesigned from the constraint up — asking what becomes possible, not what becomes faster.
+
+Faster is a feature.
+Possible is a business model.
+
+One is incremental. The other is existential.
+
+Is your AI strategy about going 20% faster — or doing something that wasn't possible before?`,
+
+`Unpopular opinion: the AI arms race is making most teams worse.
+Not better. Actually worse.
+
+${title}.
+
+${desc}
+
+When everyone moves fast, the advantage goes to whoever moves clearly.
+Speed without clarity is just expensive confusion at scale.
+
+Most AI initiatives right now are:
+→ Measuring adoption, not outcomes
+→ Optimizing for demos, not for users who depend on the product
+→ Moving fast in directions nobody has fully thought through
+
+The teams that will look smart in 2027 are slowing down long enough to ask:
+"What are we actually trying to accomplish — and how will we know if we got there?"
+
+Is your team moving fast, or moving clearly?`
     ];
-    return `${pick(opinionHooks)}\n\n${bodies[day % bodies.length]}\n\n${tags}`;
+    return `${t[day % t.length]}\n\n${tags}`;
   }
 
-  if (style === 'story') {
-    const closers = [
-`Just a year ago, this would have been a funded research project. Now it's a weekend build.
+  if(style === 'story'){
 
-The gap between "research" and "anyone can build this" has never been smaller.
+    if(isLeadership && !isGenAI){
+      const t = [
+`A manager shared something in a thread this week that I keep coming back to.
 
-We might actually be cooked — in the best way possible.`,
+${title}.
 
-`Six months ago this was a paper. Three months ago it was a closed demo. This week someone open sourced it.
+${desc}
 
-The compounding is real. And it's not slowing down.
+They'd run the same weekly team meeting for two years.
+Status updates. Action items. Same format every time.
 
-Are you keeping up, or are you already playing catch-up?`,
+Then they changed one thing:
+They started every meeting by asking "What's something you're uncertain about that you haven't said out loud yet?"
 
-`The thing that gets me isn't the technology. It's the pace.
+Within a month, three process problems surfaced that had been silently slowing the team down for quarters.
 
-Every week there's a new "this changes everything." And somehow, every week, it actually does.
+The information was always there.
+Nobody felt safe enough to surface it.
 
-What does your roadmap look like if this pace holds for another 12 months?`,
+What question could you ask your team this week that would surface what's not being said?`,
+
+`A leader posted something this week that reframed how I think about team performance.
+
+${title}.
+
+${desc}
+
+Their team had strong individual contributors and weak collective output.
+Every 1:1 was positive. Every team meeting was surface-level.
+
+The diagnosis: high individual confidence, low collective safety.
+
+The fix wasn't a new process.
+The leader started publicly sharing their own uncertainties first — before asking anyone else to.
+
+Within 60 days the team dynamic changed completely.
+
+Safety isn't built with policies. It's built with modeling.
+
+What uncertainty could you share with your team this week?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    if(isProduct){
+      const t = [
+`A founder shared their pivot story this week.
+One line stopped me completely.
+
+${title}.
+
+${desc}
+
+"We had 10,000 users and zero product-market fit.
+So we deleted every feature except what our 10 best users used every single week.
+Six months later: 1,000 users, profitable, best retention we'd ever seen."
+
+Less is almost always the move.
+Almost nobody is willing to make it until they have no other choice.
+
+What would you cut if you could only keep what your best users actually use every week?`,
+
+`Someone posted a product teardown this week that I keep coming back to.
+
+${title}.
+
+${desc}
+
+They tried 4 different GTM motions in 18 months. None worked.
+Then they stopped trying to reach everyone and asked one question:
+"Who is the one person whose life we completely change?"
+
+Found her. Built for her specifically.
+She told 10 people. Those 10 told 100.
+
+The distribution strategy was never the problem.
+The specificity was.
+
+Who is your "one person"?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    if(isCareer){
+      const t = [
+`A senior engineer shared their career story this week.
+The turning point wasn't what I expected.
+
+${title}.
+
+${desc}
+
+They'd been a strong IC for 5 years. Great at execution. Invisible in decisions.
+
+The shift happened when they started writing down the reasoning behind every major technical decision they made — not just the decision itself.
+
+Within 6 months they'd been promoted twice.
+
+The work hadn't changed.
+The legibility of their thinking had.
+
+When was the last time you documented not just what you built — but why you built it that way?`,
+
+`Someone shared their job search story this week that I think about differently now.
+
+${title}.
+
+${desc}
+
+They applied to 40 companies. Got 3 interviews.
+Then they changed one thing: they started leading every conversation with a specific decision they'd made, the tradeoff they'd considered, and what they'd do differently.
+
+Next 10 applications: 7 interviews.
+
+Hiring managers don't remember what you built.
+They remember how you think.
+
+What's the most interesting technical decision you've made in the last 6 months — and can you explain the reasoning clearly?`
+      ];
+      return `${t[day % t.length]}\n\n${tags}`;
+    }
+
+    // AI story
+    const t = [
+`A developer posted a demo this week that stopped my scroll completely.
+
+${title}.
+
+${desc}
+
+Let me put the timeline in perspective:
+
+6 months ago → specialized team, months of work, not production-ready.
+3 months ago → closed beta, waitlist only.
+This week → open sourced, anyone can run it in 5 minutes.
+
+The thing that gets me isn't the technology.
+It's the compression of that timeline.
+
+Every week "impressive" becomes "baseline."
+
+Are you building on today's ceiling — or last year's?`,
+
+`I saw something this week I haven't been able to stop thinking about.
+
+${title}.
+
+${desc}
+
+A year ago this was a research paper that maybe 200 people read.
+Six months ago it was a closed demo at a conference.
+This week someone built it as a weekend project and open sourced it.
+
+The gap between "frontier research" and "available to every developer" has never been smaller.
+And it's still compressing.
+
+We might actually be cooked — in the best possible way.
+
+What are you building today that only became possible in the last 6 months?`
     ];
-    return `${pick(storyOpeners)}\n\n${title}.\n\n${desc}\n\n${closers[day % closers.length]}\n\n${tags}`;
+    return `${t[day % t.length]}\n\n${tags}`;
   }
 
   return `${title}\n\n${desc}\n\nThe ceiling keeps moving.\n\n${tags}`;
