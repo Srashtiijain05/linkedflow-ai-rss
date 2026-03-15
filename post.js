@@ -614,54 +614,69 @@ Is your team moving fast, or moving clearly?`
   }
 
   if(style === 'story'){
+    const devNames = ['Marcus','Priya','Alex','Jordan','Sana','Ryo','Leila','Dev'];
+    const name     = devNames[day % devNames.length];
 
-    if(isLeadership && !isGenAI){
-      const t = [
-`A manager shared something in a thread this week that I keep coming back to.
-
-${title}.
-
-${desc}
-
-They'd run the same weekly team meeting for two years.
-Status updates. Action items. Same format every time.
-
-Then they changed one thing:
-They started every meeting by asking "What's something you're uncertain about that you haven't said out loud yet?"
-
-Within a month, three process problems surfaced that had been silently slowing the team down for quarters.
-
-The information was always there.
-Nobody felt safe enough to surface it.
-
-What question could you ask your team this week that would surface what's not being said?`,
-
-`A leader posted something this week that reframed how I think about team performance.
+    const aiT = [
+`A developer named ${name} just shared something that stopped my scroll.
 
 ${title}.
 
 ${desc}
 
-Their team had strong individual contributors and weak collective output.
-Every 1:1 was positive. Every team meeting was surface-level.
+Just a year ago most people were still using AI like a better Google.
+Now we're watching ${name} and builders like them ship things that would have required a full team 18 months ago.
 
-The diagnosis: high individual confidence, low collective safety.
+The speed of what's being built right now is honestly hard to process.
 
-The fix wasn't a new process.
-The leader started publicly sharing their own uncertainties first — before asking anyone else to.
+We might actually be cooked — in the best possible way.`,
 
-Within 60 days the team dynamic changed completely.
+`${name} posted a demo this week and I haven't been able to stop thinking about it.
 
-Safety isn't built with policies. It's built with modeling.
+${title}.
 
-What uncertainty could you share with your team this week?`
-      ];
-      return `${t[day % t.length]}\n\n${tags}`;
-    }
+${desc}
 
-    if(isProduct){
-      const t = [
-`A founder shared their pivot story this week.
+Six months ago this was a research paper.
+Three months ago it was a closed beta 200 people had access to.
+This week ${name} built it over a weekend and open sourced it.
+
+The gap between "frontier AI research" and "anyone can build this on a Saturday" has never been smaller.
+And it's still shrinking.`,
+
+`I saw ${name}'s post this week and I'm still processing it.
+
+${title}.
+
+${desc}
+
+A year ago we were impressed when AI could write a decent email.
+Now we're watching individual developers ship things that used to require entire teams, months, and millions in infrastructure.
+
+The compounding is real. And it's not slowing down.
+
+What are you building today that only became possible in the last 6 months?`,
+
+`${name} just quietly dropped something the whole industry should be paying attention to.
+
+${title}.
+
+${desc}
+
+The thing that gets me isn't the technology itself.
+It's the timeline.
+
+18 months ago: research lab, 50 people.
+6 months ago: YC startup, $5M raised.
+This week: ${name}, solo, weekend project, open sourced.
+
+That compression is the actual story.
+
+We might actually be cooked.`,
+    ];
+
+    const productT = [
+`A founder named ${name} shared their pivot story this week.
 One line stopped me completely.
 
 ${title}.
@@ -669,112 +684,79 @@ ${title}.
 ${desc}
 
 "We had 10,000 users and zero product-market fit.
-So we deleted every feature except what our 10 best users used every single week.
+So we deleted everything except what our 10 best users used every single week.
 Six months later: 1,000 users, profitable, best retention we'd ever seen."
 
 Less is almost always the move.
 Almost nobody is willing to make it until they have no other choice.
 
-What would you cut if you could only keep what your best users actually use every week?`,
+What would you cut if you could only keep what your best users use every week?`,
 
-`Someone posted a product teardown this week that I keep coming back to.
+`${name} posted a teardown this week that I keep coming back to.
 
 ${title}.
 
 ${desc}
 
-They tried 4 different GTM motions in 18 months. None worked.
+They tried 4 different GTM strategies in 18 months. None worked.
 Then they stopped trying to reach everyone and asked one question:
 "Who is the one person whose life we completely change?"
 
-Found her. Built for her specifically.
-She told 10 people. Those 10 told 100.
+Found her. Built for her specifically. She told 10 people.
+Those 10 told 100.
 
 The distribution strategy was never the problem.
 The specificity was.
 
-Who is your "one person"?`
-      ];
-      return `${t[day % t.length]}\n\n${tags}`;
-    }
+Who is your "one person"?`,
+    ];
 
-    if(isCareer){
-      const t = [
-`A senior engineer shared their career story this week.
-The turning point wasn't what I expected.
+    const leaderT = [
+`A manager named ${name} shared something in a thread this week.
+I've been thinking about it since.
 
 ${title}.
 
 ${desc}
 
-They'd been a strong IC for 5 years. Great at execution. Invisible in decisions.
+They changed one thing about their weekly team meeting:
+They started it by asking "What's something you're uncertain about that you haven't said out loud yet?"
 
-The shift happened when they started writing down the reasoning behind every major technical decision they made — not just the decision itself.
+Within a month, three process problems surfaced that had been silently slowing the team for quarters.
 
-Within 6 months they'd been promoted twice.
+The information was always there.
+Nobody felt safe enough to say it.
+
+What question could you ask your team this week that would surface what's not being said?`,
+    ];
+
+    const careerT = [
+`A senior engineer named ${name} shared their career inflection point this week.
+It wasn't what I expected.
+
+${title}.
+
+${desc}
+
+${name} had been a strong IC for 5 years. Great execution. Nearly invisible in decisions.
+
+The shift: they started writing down the reasoning behind every major technical call.
+Not just the decision. The why.
+
+Within 6 months: two promotions.
 
 The work hadn't changed.
 The legibility of their thinking had.
 
-When was the last time you documented not just what you built — but why you built it that way?`,
-
-`Someone shared their job search story this week that I think about differently now.
-
-${title}.
-
-${desc}
-
-They applied to 40 companies. Got 3 interviews.
-Then they changed one thing: they started leading every conversation with a specific decision they'd made, the tradeoff they'd considered, and what they'd do differently.
-
-Next 10 applications: 7 interviews.
-
-Hiring managers don't remember what you built.
-They remember how you think.
-
-What's the most interesting technical decision you've made in the last 6 months — and can you explain the reasoning clearly?`
-      ];
-      return `${t[day % t.length]}\n\n${tags}`;
-    }
-
-    // AI story
-    const t = [
-`A developer posted a demo this week that stopped my scroll completely.
-
-${title}.
-
-${desc}
-
-Let me put the timeline in perspective:
-
-6 months ago → specialized team, months of work, not production-ready.
-3 months ago → closed beta, waitlist only.
-This week → open sourced, anyone can run it in 5 minutes.
-
-The thing that gets me isn't the technology.
-It's the compression of that timeline.
-
-Every week "impressive" becomes "baseline."
-
-Are you building on today's ceiling — or last year's?`,
-
-`I saw something this week I haven't been able to stop thinking about.
-
-${title}.
-
-${desc}
-
-A year ago this was a research paper that maybe 200 people read.
-Six months ago it was a closed demo at a conference.
-This week someone built it as a weekend project and open sourced it.
-
-The gap between "frontier research" and "available to every developer" has never been smaller.
-And it's still compressing.
-
-We might actually be cooked — in the best possible way.
-
-What are you building today that only became possible in the last 6 months?`
+When was the last time you documented not just what you built — but why?`,
     ];
+
+    const t = isGenAI ? aiT
+      : isProduct ? productT
+      : (isLeadership && !isGenAI) ? leaderT
+      : isCareer ? careerT
+      : aiT;
+
     return `${t[day % t.length]}\n\n${tags}`;
   }
 
