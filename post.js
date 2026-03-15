@@ -10,24 +10,35 @@ const FEED_KEY = process.env.FEED_KEY  || 'tech';
 
 // ── ARTICLE BANK (Tech/AI focused) ───────────────────────────────────────────
 const ARTICLES = [
-  { title: "The Biggest Mistake Engineers Make When Adopting AI Tools", desc: "Most teams treat AI as a faster search engine. The teams 10x-ing their output are using it to rethink the problem entirely — not just speed up the old solution." },
-  { title: "Why Your AI Prototype Works But Your AI Product Doesn't", desc: "The gap between a demo and production AI is not a technical problem. It's a data, feedback loop, and incentive problem. Most teams learn this the hard way." },
-  { title: "LLMs Are Not Magic — Here's the Mental Model That Actually Helps", desc: "The engineers shipping the best AI products treat LLMs like a very well-read intern with no memory and no judgment. That framing changes everything about how you design systems." },
-  { title: "The Real Reason AI Projects Fail in Enterprise", desc: "It's rarely the model. It's the data pipeline, the stakeholder alignment, and the absence of a feedback loop. 70% of enterprise AI pilots never reach production." },
-  { title: "How the Best AI Teams Are Structuring Their Engineering Orgs", desc: "The fastest-moving AI teams share one trait: they've broken down the wall between research and engineering. Separate orgs = 6x slower deployment cycles." },
-  { title: "AI Won't Replace Developers — But It Will Split Them Into Two Groups", desc: "Group 1: developers who use AI to go 10x faster. Group 2: developers who don't. The gap is already showing up in hiring, output, and compensation data." },
-  { title: "The Skill That Separates Good Engineers From Great Ones in 2026", desc: "It's not the language or the framework. It's the ability to break down ambiguous problems into clear, testable hypotheses — and AI makes this even more critical, not less." },
-  { title: "Why the Best Engineers Are Learning to Write Better", desc: "In an AI-assisted world, the person who can specify what they want precisely is the one who ships. Writing is now a core engineering skill, not a soft skill." },
-  { title: "What 500 Job Posts Tell Us About What Tech Companies Actually Want in 2026", desc: "AI literacy is now table stakes. What actually differentiates candidates is systems thinking, cross-functional communication, and the ability to work with ambiguous requirements." },
-  { title: "The Quiet Shift Happening in How Products Are Built", desc: "The best product teams have cut their planning cycles in half — not by moving faster, but by shipping smaller. AI tools have made tight feedback loops the default, not the exception." },
-  { title: "What I Learned From Reviewing 200+ Developer Portfolios", desc: "Most portfolios show what you built. The ones that get interviews show how you think, what tradeoffs you made, and what you'd do differently. Process beats outcome every time." },
-  { title: "The Career Advice Nobody in Tech Gives You But Should", desc: "Your first 5 years are for building depth. Your next 5 are for building context. Most people invert this and wonder why they hit a ceiling at senior level." },
-  { title: "How to Stand Out in Tech When Everyone Has the Same Skills", desc: "The engineers who get noticed aren't the best coders. They're the ones who understand the business problem deeply enough to push back on the wrong requirements." },
-  { title: "Why Junior Developers Who Learn AI Tooling Now Will Lead Teams in 3 Years", desc: "The compounding effect of AI-assisted development is real. Someone using these tools effectively from year one will have the output experience of a 5-year developer by year three." },
-  { title: "New Research: Companies With Strong Engineering Culture Ship 4x Faster", desc: "A study of 300 engineering orgs found that culture — not headcount, tooling, or budget — is the single strongest predictor of deployment frequency and developer satisfaction." },
-  { title: "The Data Behind Why Async-First Teams Outperform Meeting-Heavy Ones", desc: "Teams that default to async communication ship 28% more features per quarter. The productivity cost of a single unnecessary meeting is higher than most managers estimate." },
-  { title: "Open Source AI Is Closing the Gap With Closed Models Faster Than Expected", desc: "Six months ago, open source models were 18 months behind frontier. Today that gap is closer to 6 months — and in some benchmarks, it's already closed completely." },
+  // 🚀 New Models
+  { title: "Meta Releases Llama 4 — Open Source Just Caught Up to GPT-4", desc: "Llama 4's mixture-of-experts architecture matches closed frontier models on most benchmarks. The open source vs closed model debate just got a lot more interesting." },
+  { title: "Google DeepMind's Gemini 2.0 Rewrites the Rules on Multimodal AI", desc: "Native audio, image, and video understanding in a single model. The architecture shift from text-first to truly multimodal changes how we think about AI system design." },
+  { title: "Mistral's New Model Runs on a Laptop — And It's Surprisingly Good", desc: "7B parameters, 4-bit quantized, running locally at 40 tokens/second. The gap between cloud and edge AI just closed by a significant margin." },
+  { title: "Anthropic's Claude 3.5 Sets a New Bar for Code Generation", desc: "Beating GPT-4 on SWE-bench with 49% solve rate. The architectural changes behind this jump are more interesting than the benchmark number itself." },
+  { title: "OpenAI o3 Reasoning Model: What the New Architecture Actually Changes", desc: "Chain-of-thought is now a first-class citizen in the model architecture, not a prompting trick. This changes how you build reliable AI systems fundamentally." },
+
+  // 🏗️ New Architectures
+  { title: "Mamba Architecture Is Replacing Transformers in Production — Here's Why", desc: "State space models process sequences in O(n) instead of O(n²). For long context, the performance difference is not marginal — it's an order of magnitude." },
+  { title: "Mixture of Experts Is Now the Default Architecture for Frontier Models", desc: "GPT-4, Gemini, Mixtral, Llama 4 — they all use MoE. Understanding why this architecture won matters more than knowing it exists." },
+  { title: "The New Diffusion Architecture That's Making Image Generation 10x Faster", desc: "Consistency models and flow matching are replacing DDPM. The inference speed improvement makes real-time image generation practical for the first time." },
+  { title: "Why Everyone Is Moving From RAG to Agentic Retrieval in 2026", desc: "Static RAG pipelines break on complex queries. Agentic retrieval — where the model decides what to look up and when — solves the problems RAG couldn't." },
+  { title: "Kolmogorov-Arnold Networks: The Architecture That Challenges MLPs", desc: "KANs replace fixed activation functions with learnable splines on edges. Smaller, more interpretable, and surprisingly competitive on scientific tasks." },
+
+  // ⚙️ New Frameworks & Tools
+  { title: "LangGraph Is Replacing LangChain for Production AI Agents", desc: "Stateful, cyclical graphs instead of linear chains. The mental model shift is significant — and the production stability difference is even more so." },
+  { title: "DSPy: The Framework That's Killing Hand-Written Prompts", desc: "Compile your prompts instead of writing them. DSPy optimizes prompts automatically using your data. The prompting-as-code paradigm is here." },
+  { title: "Vercel's AI SDK 4.0 Makes Streaming LLM Responses Trivial", desc: "Unified API across OpenAI, Anthropic, Mistral, and Cohere. Structured outputs, tool calling, and streaming — all with the same three lines of code." },
+  { title: "Ollama Just Made Local LLM Deployment as Easy as Docker", desc: "Pull, run, and serve any open source model in under 60 seconds. The local-first AI development workflow is now accessible to every developer." },
+  { title: "CrewAI vs AutoGen vs LangGraph — The Multi-Agent Framework Comparison Nobody Did Properly", desc: "After building the same agent system in all three, the differences in reliability, debuggability, and production readiness are stark. Here's the honest breakdown." },
+
+  // 🎨 New Designs & Patterns
+  { title: "The Context Window Is Now a Design Surface — Not Just a Limit", desc: "With 1M+ token windows, the constraint has flipped. The hard problem is now what to put in context, not whether it fits. This changes AI system architecture completely." },
+  { title: "Function Calling Is Obsolete — Structured Outputs Are the New Primitive", desc: "JSON mode was a hack. Native structured outputs with schema validation change how you build reliable AI pipelines. The reliability improvement is not subtle." },
+  { title: "The Evaluation-Driven Development Pattern for AI Systems", desc: "Build your evals before your prompts. The teams shipping reliable AI in production have adopted this discipline. It's the TDD moment for AI engineering." },
+  { title: "Constitutional AI: The Design Pattern Behind Claude's Reliability", desc: "RLAIF instead of RLHF, with explicit principles. The architectural choice explains why some models are more consistently useful than others across edge cases." },
+  { title: "Vector Databases Are Being Replaced — Here's What Comes Next", desc: "Hybrid search combining dense vectors with sparse BM25 retrieval outperforms pure vector search on real-world queries. The all-vector approach has a ceiling." },
 ];
+
 
 // ── STYLES ────────────────────────────────────────────────────────────────────
 const STYLES = ['authority', 'educational', 'opinion'];
