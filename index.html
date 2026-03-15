@@ -1180,80 +1180,84 @@ function makePost(item){
   const pick    = arr => arr[day % arr.length];
   const txt     = (title + ' ' + summary).toLowerCase();
 
-  // ── SMART HASHTAGS ────────────────────────────────────────────────────────
+  // ── TOPIC DETECTION ───────────────────────────────────────────────────────
+  const isAI        = txt.includes('ai') || txt.includes('model') || txt.includes('llm') || txt.includes('gpt') || txt.includes('claude') || txt.includes('gemini');
+  const isProduct   = txt.includes('product') || txt.includes('startup') || txt.includes('founder') || txt.includes('user') || txt.includes('scale');
+  const isFramework = txt.includes('framework') || txt.includes('library') || txt.includes('tool') || txt.includes('open source') || txt.includes('github');
+  const isResearch  = txt.includes('research') || txt.includes('paper') || txt.includes('study') || txt.includes('data show') || txt.includes('benchmark');
+  const isCareer    = txt.includes('career') || txt.includes('skill') || txt.includes('hiring') || txt.includes('developer') || txt.includes('engineer');
+
+  // ── SMART HASHTAGS — combine ALL matching rules ───────────────────────────
   const tagRules = [
-    { w: ['gpt','openai','o1','o3'],                                    tags: ['#OpenAI','#GenerativeAI','#LLMs'] },
-    { w: ['claude','anthropic'],                                        tags: ['#Anthropic','#GenerativeAI','#LLMs'] },
-    { w: ['gemini','google deepmind'],                                  tags: ['#GoogleAI','#GenerativeAI','#LLMs'] },
-    { w: ['llama','meta ai'],                                           tags: ['#MetaAI','#OpenSourceAI','#LLMs'] },
-    { w: ['mistral','mixtral'],                                         tags: ['#Mistral','#OpenSourceAI','#LLMs'] },
-    { w: ['transformer','mamba','moe','architecture','neural'],        tags: ['#AIArchitecture','#DeepLearning'] },
-    { w: ['agent','agentic','multi-agent'],                            tags: ['#AIAgents','#LLMs','#GenerativeAI'] },
-    { w: ['rag','retrieval','vector','embedding'],                     tags: ['#RAG','#AIEngineering','#LLMs'] },
-    { w: ['langchain','langgraph','dspy','llamaindex'],                tags: ['#AIFrameworks','#LLMOps'] },
-    { w: ['ollama','open source','hugging face'],                     tags: ['#OpenSourceAI','#AITools'] },
-    { w: ['inference','deployment','production','mlops'],              tags: ['#MLOps','#LLMOps','#AIEngineering'] },
-    { w: ['startup','founder','product','launch','ship'],             tags: ['#BuildInPublic','#TechStartups','#ProductThinking'] },
-    { w: ['career','hiring','engineer','developer','skill'],          tags: ['#TechCareers','#SoftwareEngineering'] },
-    { w: ['paper','arxiv','research','study','benchmark'],            tags: ['#AIResearch','#MachineLearning'] },
-    { w: ['ai','model','llm','language model'],                       tags: ['#AI','#GenerativeAI'] },
-    { w: ['tech','software','code','developer'],                      tags: ['#Tech','#SoftwareEngineering'] },
+    { cond: txt.includes('openai') || txt.includes('gpt'),             tags: ['#OpenAI','#GenerativeAI','#LLMs'] },
+    { cond: txt.includes('claude') || txt.includes('anthropic'),       tags: ['#Anthropic','#GenerativeAI','#LLMs'] },
+    { cond: txt.includes('gemini') || txt.includes('google deepmind'), tags: ['#GoogleAI','#GenerativeAI','#LLMs'] },
+    { cond: txt.includes('llama') || txt.includes('meta ai'),          tags: ['#MetaAI','#OpenSourceAI','#LLMs'] },
+    { cond: txt.includes('mistral') || txt.includes('mixtral'),        tags: ['#Mistral','#OpenSourceAI','#LLMs'] },
+    { cond: txt.includes('agent') || txt.includes('agentic'),          tags: ['#AIAgents','#GenerativeAI'] },
+    { cond: txt.includes('rag') || txt.includes('retrieval'),          tags: ['#RAG','#AIEngineering'] },
+    { cond: txt.includes('architecture') || txt.includes('transformer'),tags: ['#AIArchitecture','#DeepLearning'] },
+    { cond: isFramework && isAI,                                        tags: ['#AIFrameworks','#LLMOps','#AIEngineering'] },
+    { cond: isProduct && isAI,                                          tags: ['#AIProduct','#ProductThinking','#BuildInPublic'] },
+    { cond: isProduct && !isAI,                                         tags: ['#ProductThinking','#StartupLife','#BuildInPublic'] },
+    { cond: isCareer && isAI,                                           tags: ['#AIEngineering','#TechCareers','#SoftwareEngineering'] },
+    { cond: isResearch && isAI,                                         tags: ['#AIResearch','#MachineLearning'] },
+    { cond: isAI,                                                        tags: ['#AI','#GenerativeAI'] },
+    { cond: true,                                                        tags: ['#Tech','#Innovation'] },
   ];
 
   let allTags = [];
   for(const rule of tagRules){
-    if(rule.w.some(w => txt.includes(w))){
-      allTags.push(...rule.tags);
-      if(allTags.length >= 5) break;
-    }
+    if(rule.cond){ allTags.push(...rule.tags); }
+    if(allTags.length >= 8) break;
   }
   const hashtags = [...new Set(allTags)].slice(0, 4).join(' ');
+  const ending   = '\n\n' + hashtags;
 
-  // ── DETECT TOPIC TYPE ─────────────────────────────────────────────────────
-  const isAI       = txt.includes('ai') || txt.includes('model') || txt.includes('llm') || txt.includes('gpt');
-  const isProduct  = txt.includes('product') || txt.includes('startup') || txt.includes('founder') || txt.includes('user');
-  const isFramework= txt.includes('framework') || txt.includes('library') || txt.includes('tool') || txt.includes('open source');
-  const isCareer   = txt.includes('career') || txt.includes('skill') || txt.includes('job') || txt.includes('engineer');
-  const isResearch = txt.includes('research') || txt.includes('paper') || txt.includes('study') || txt.includes('benchmark');
+  // ─────────────────────────────────────────────────────────────────────────
+  // HPC FORMAT
+  // HOOK   → 1-2 lines. Bold claim or tension. Stops the scroll.
+  // PLOT   → Title + summary + 2-3 specific bridge lines. Builds context.
+  // CLIMAX → Sharp insight or reframe. ONE closing question.
+  // ─────────────────────────────────────────────────────────────────────────
 
-  // ── HPC FORMAT ────────────────────────────────────────────────────────────
-  // HOOK    → 1 line. Stops the scroll. Curiosity or tension.
-  // PLOT    → 3-5 short lines. Context, what happened, why it matters.
-  // CLIMAX  → The punchline, reframe, or insight. Ends with a question.
-
+  // ── AUTHORITY ─────────────────────────────────────────────────────────────
   if(S.style === 'authority'){
-
     const templates = isProduct ? [
-`Most startups don't fail because of bad products.
-They fail because they built the right product for the wrong person.
+`Most products don't fail because of bad execution.
+They fail because of good execution on the wrong problem.
 
 ${title}.
 
 ${summary}
 
-The companies that last aren't the ones who moved fastest.
-They're the ones who got obsessively specific — about the user, the problem, the moment.
+The research on this is consistent:
 
-Broad vision feels exciting in pitch decks.
-Narrow focus is what actually ships.
+→ 42% of startups fail because there was no market need — not because the product was bad
+→ Companies that talk to users weekly are 3x more likely to reach product-market fit
+→ The top retention signal isn't NPS — it's whether users would be "very disappointed" without your product
+
+The companies that scale aren't the ones who moved fastest.
+They're the ones who got obsessively specific — one user, one problem, one moment.
 
 The question that changes everything:
 Who is the one specific person your product exists for?`,
 
-`The best founders I know ask one question obsessively.
-"Does this specific person have this specific problem right now?"
+`The best founders I know are not the smartest people in the room.
+They are the most specific.
 
 ${title}.
 
 ${summary}
 
-Everyone else is asking: "How do we grow?"
-The best are asking: "How do we make our last 10 users genuinely successful?"
+Here's what separates the products that scale from the ones that stall:
 
-The growth always follows the second question.
-It almost never follows the first.
+The ones that scale solve one painful problem completely for one specific person.
+The ones that stall solve three medium problems partially for a vague audience.
 
-What would change in your roadmap if you got 10x more specific?`
+Specificity isn't a constraint. It's a strategy.
+
+What would you stop building if you had to get 10x more specific about who you're building for?`
 
     ] : isAI ? [
 `Most teams are reacting to AI.
@@ -1263,14 +1267,19 @@ ${title}.
 
 ${summary}
 
+Think about the timeline here:
+
 Six months ago this was an edge case.
 Today it's table stakes.
 In six more months, teams without it will be explaining why.
 
-The window to get ahead of this is open.
-It's also closing faster than most roadmaps acknowledge.
+The difference between those teams isn't budget or talent.
+It's whether they updated their priors when the evidence changed.
 
-What's the one assumption in your current stack this changes?`,
+The window to get ahead of this is open.
+It's closing faster than most roadmaps acknowledge.
+
+What's the one assumption in your current stack this invalidates?`,
 
 `The gap isn't talent.
 The gap is timing.
@@ -1279,135 +1288,152 @@ ${title}.
 
 ${summary}
 
-The teams that will look smart in 18 months aren't the smartest in the room.
-They're the ones who updated their priors the fastest when the evidence changed.
+The teams that will look smart in 18 months aren't the most resourced.
+They're the ones who updated their architecture when the capabilities changed — not after everyone else did.
 
-This is one of those moments.
+Here's the hard truth:
+→ Last year's AI assumptions are already outdated
+→ The performance floor moved significantly — use cases that were unreliable are now production-ready
+→ The teams rearchitecting now will have a 12-month head start
 
-Is your team reacting — or redesigning?`
+Is your team building on today's capabilities — or last year's constraints?`
 
     ] : isFramework ? [
-`The tools you use don't determine what you build.
-But they do determine how fast you learn what's wrong.
+`The tools you choose don't determine what you build.
+They determine how fast you discover what's wrong.
 
 ${title}.
 
 ${summary}
 
-Most engineers adopt new frameworks to go faster.
-The best engineers adopt new frameworks to fail faster.
-There's a difference — and it shows up in production.
+Here's what the teams shipping the most reliable AI have in common:
 
-The teams shipping the most reliable AI right now all made this switch.
-Not because it's trendy. Because it works.
+They don't adopt frameworks to go faster.
+They adopt frameworks to fail faster — in development, not production.
 
-What's the failure mode you haven't tested yet?`,
+The distinction sounds small. The outcomes are not.
+
+→ Fast failure in dev = cheap learning
+→ Fast failure in prod = expensive incident
+
+What's the failure mode you haven't deliberately tested yet?`,
 
 `The framework wars are a distraction.
-The real question is: what does this make possible that wasn't possible before?
+The real question is: what does this make possible that wasn't before?
 
 ${title}.
 
 ${summary}
 
-Every major tooling shift in tech history looked optional until it wasn't.
-This one is moving faster than most.
+Every major tooling shift in tech history followed the same pattern:
+Optional → Useful → Standard → Required
 
-The teams that will regret not paying attention are the ones currently deciding to wait and see.
+The teams that wait for "Required" spend the next 18 months catching up.
 
-What's your "wait and see" threshold?`
+The teams that move at "Useful" define what the next 18 months looks like.
+
+Which stage is your team currently at?`
 
     ] : [
-`The story isn't the headline.
-The story is what the headline reveals about where things are heading.
+`Everyone sees the headline.
+Almost nobody asks the right second question.
 
 ${title}.
 
 ${summary}
 
-Most people read this and react to the surface.
-The interesting move is asking: what does this change about the decisions I'm making this quarter?
+The surface story is interesting.
+The second-order question is what actually matters:
 
-The teams winning right now aren't moving faster.
-They're asking better questions earlier.
+What does this change about the decisions I'm making this quarter?
+
+The teams winning right now aren't the fastest movers.
+They're the ones asking better questions earlier.
 
 What's the question this raises for your team?`,
 
-`Everyone sees the news.
-Very few update their behavior because of it.
+`The story isn't the news.
+The story is what the news reveals about where things are heading.
 
 ${title}.
 
 ${summary}
 
-The gap between "aware of a trend" and "acting on a trend" is where most competitive advantages are lost.
+Most people read this and react.
+The interesting move is to ask: what would I do differently if I fully believed this was as significant as it appears?
 
-Knowing isn't the edge. Adjusting is.
+That question changes your roadmap.
+Very few people actually answer it honestly.
 
-What would you do differently if you fully believed this was as significant as it appears?`
+What would you do differently?`
     ];
-
-    return `${templates[day % templates.length]}\n\n${hashtags}`;
+    return `${templates[day % templates.length]}${ending}`;
   }
 
+  // ── EDUCATIONAL ───────────────────────────────────────────────────────────
   if(S.style === 'educational'){
-
     const templates = isProduct ? [
-`Nobody taught us how to find the right problem.
-They just told us to "talk to users."
+`Nobody teaches product teams how to find the right problem.
+They just say "talk to users" and hope for the best.
 
 ${title}.
 
 ${summary}
 
-Here's what "talking to users" actually means:
+Here's what "talk to users" actually means in practice:
 
-→ Ask about their last experience, not their future wishes
-→ Look for the problem behind the problem they describe
-→ Find the one who would pay today, not "someday"
+→ Ask about their last frustrating experience — not what features they want
+→ Look for the problem behind the problem they describe first
+→ Find the person who would pay today, not "someday when it has X feature"
 
-Most product teams do interviews. Very few do this.
+Most teams do interviews. Very few do this.
+The ones that do find their real customer 3x faster.
 
-Which of these is missing from your current process?`,
+Which of these is missing from your current discovery process?`,
 
-`The product advice everyone gives is wrong.
-"Build fast, learn fast" only works if you're learning the right things.
+`The product metrics most teams track are the wrong ones.
+Here's what the best teams measure instead.
 
 ${title}.
 
 ${summary}
 
-Three things the best product teams measure that most don't:
+Three metrics that actually predict long-term success:
 
-1. Time to first value — not time to first signup
-2. Repeat usage depth — not daily active users
-3. What users do right before they churn — not why they say they churned
+1. Time to first value — not time to first signup (they're very different)
+2. Session depth on day 7 — not day 1 activation (anyone can optimize onboarding)
+3. Voluntary word-of-mouth rate — not NPS (people lie on surveys, they don't lie with referrals)
 
-The metrics you choose determine the product you build.
+The metrics you choose shape the product you build.
+Most teams are unknowingly optimizing for vanity, not retention.
 
-Which metric is quietly misleading your team right now?`
+Which metric is quietly misleading your team's decisions right now?`
 
     ] : isAI ? [
 `Most AI projects don't fail because of bad models.
-They fail because nobody defined what "good" looks like before shipping.
+They fail because nobody defined what "good" actually looks like.
 
 ${title}.
 
 ${summary}
 
-The mental model that changes everything:
+Let that sink in for a second — then consider what it means:
 
 Build your evaluation before you build your pipeline.
 Know what "correct" means before you optimize for it.
-Define failure modes before they define you.
+Define your failure modes before they define your post-mortem.
 
-The teams doing this are shipping faster and breaking less.
-Because they're not discovering their assumptions in production.
+The teams shipping reliable AI are not smarter.
+They're just not discovering their assumptions in production.
+
+Here's the difference:
+→ Without evals: you're guessing if it works
+→ With good evals: you can improve it systematically and ship with confidence
 
 What's your current definition of "good" for the AI feature you're building?`,
 
 `The difference between an AI demo and an AI product is one thing.
-Evals.
+Not the model. Not the infrastructure. Evals.
 
 ${title}.
 
@@ -1415,74 +1441,78 @@ ${summary}
 
 Here's the breakdown most engineers learn the hard way:
 
-→ Without evals: you're guessing if it works
-→ With basic evals: you know when it breaks
-→ With good evals: you can improve it systematically
+→ Skip evals → discover failure modes in production (expensive)
+→ Basic evals → know when it breaks (better, still reactive)
+→ Good evals → improve systematically, ship confidently (the goal)
 
-Most teams skip straight to shipping.
-The best teams start with the eval harness and build backwards.
+The teams at level 3 aren't smarter. They just started with the eval harness and built backwards.
 
-Where does your team sit on this spectrum?`
+Most teams start with the feature and add evals later.
+"Later" usually means "after the first production incident."
+
+Which level is your team at right now?`
 
     ] : [
-`The most valuable skill in tech right now isn't coding.
-It's knowing what to build.
+`The most valuable skill in tech right now isn't coding faster.
+It's knowing which problems are actually worth solving.
 
 ${title}.
 
 ${summary}
 
-Here's the breakdown:
+Here's the framework I keep coming back to:
 
-→ What most teams optimize for: speed of execution
-→ What the best teams optimize for: clarity of problem
-→ What separates them: the willingness to go slow at the start
-
-Execution is copyable. Problem selection is not.
-
-What's the most specific version of the problem your team is solving?`,
-
-`The thing that actually separates great engineers from good ones:
-They know which problems are worth solving.
-
-${title}.
-
-${summary}
-
-Three questions worth asking before your next sprint:
-
+Before your next sprint, ask three questions:
 1. Is this the most important problem right now — or just the most visible?
 2. What breaks if we solve this the wrong way?
-3. Who is the specific person who wins if we get this right?
+3. Who is the specific person who genuinely wins if we get this exactly right?
 
-The answers change what you build.
-Almost nobody asks all three.
+The answers will change what you build.
+Almost nobody asks all three before writing a single line of code.
 
-Which question does your team skip most often?`
-    ];
+Which question does your team consistently skip?`,
 
-    return `${templates[day % templates.length]}\n\n${hashtags}`;
-  }
-
-  if(S.style === 'opinion'){
-
-    const templates = isProduct ? [
-`Hot take: "product-market fit" is one of the most misused phrases in tech.
-Here's what it actually means — and why most teams don't have it.
+`Great engineers and average engineers use the same tools.
+They ask different questions.
 
 ${title}.
 
 ${summary}
 
-PMF isn't a metric. It's a feeling — and it comes from one place.
-A specific person who genuinely cannot imagine going back to life without your product.
+The question most engineers ask: "How do I build this?"
+The question great engineers ask first: "Should we build this at all?"
+
+Then: "What does 'done' actually look like for the person using this?"
+Then: "What's the failure mode we haven't thought through yet?"
+
+The answers to those three questions change everything about the execution.
+
+Which question are you skipping most often right now?`
+    ];
+    return `${templates[day % templates.length]}${ending}`;
+  }
+
+  // ── OPINION ───────────────────────────────────────────────────────────────
+  if(S.style === 'opinion'){
+    const templates = isProduct ? [
+`Hot take: "product-market fit" is the most misused phrase in tech.
+Here's what it actually means — and why most teams don't have it yet.
+
+${title}.
+
+${summary}
+
+PMF isn't a metric. It's a moment.
+It's when one specific person genuinely cannot imagine going back to life without your product.
 
 Not "a lot of people kind of like it."
+Not "our retention is okay."
 One person. Cannot imagine going back.
 
-If you can't name that person, you're still looking.
+If you can't name that person right now — you're still looking.
+And that's okay. But stop calling it PMF.
 
-Disagree? Tell me where this breaks down.`,
+Disagree? I'd genuinely like to hear the counterargument.`,
 
 `Unpopular opinion: most startups scale too early.
 Not too slowly. Too early.
@@ -1492,14 +1522,15 @@ ${title}.
 ${summary}
 
 Scaling before you've solved the core problem doesn't accelerate growth.
-It accelerates the discovery of every flaw in your foundation.
+It accelerates the discovery of every crack in your foundation — at a much higher cost.
 
 The best time to scale is when your best users are pulling you forward.
 Not when your investors are pushing you forward.
 
-There's a big difference between those two forces.
+There's a significant difference between those two forces.
+One is sustainable. One is expensive.
 
-How do you know which one is driving your growth right now?`
+How do you actually know which one is driving your growth right now?`
 
     ] : isAI ? [
 `Hot take: most AI strategies aren't AI strategies.
@@ -1515,77 +1546,89 @@ They redesigned from the constraint up — asking what becomes possible, not wha
 Faster is a feature.
 Possible is a business model.
 
-Is your AI strategy about going faster — or about doing something that wasn't possible before?`,
+One is incremental. The other is existential.
+
+Is your AI strategy about going 20% faster — or about doing something that genuinely wasn't possible before?`,
 
 `Unpopular opinion: the AI arms race is making most teams worse.
-Not better.
+Not better. Worse.
 
 ${title}.
 
 ${summary}
 
 When everyone is moving fast, the advantage goes to whoever is moving clearly.
-Speed without clarity is just expensive confusion.
+Speed without clarity is just expensive confusion at scale.
 
-Most AI initiatives right now are moving fast in directions nobody has fully thought through.
+Most AI initiatives right now are:
+→ Moving fast in directions nobody has fully thought through
+→ Measuring adoption, not outcomes
+→ Optimizing for demos, not for users who genuinely depend on the product
 
-The teams that will look smart in 2026 are the ones slowing down long enough to ask: what are we actually trying to accomplish?
+The teams that will look smart in 2027 are the ones slowing down long enough to ask:
+"What are we actually trying to accomplish — and how will we know if we got there?"
 
 Is your team moving fast, or moving clearly?`
 
     ] : [
 `The consensus on this is wrong.
-Here's the more honest version.
+Here is the more honest version.
 
 ${title}.
 
 ${summary}
 
-Everyone is reacting to the surface-level story.
+The mainstream take focuses on the surface.
 The deeper story is about incentives — and incentives always win eventually.
 
-The teams that see the incentive structure clearly right now have a window.
+Most organizations are optimizing for the wrong signal here.
+They're measuring what's easy to measure, not what actually determines the outcome.
+
+The teams that see the real signal clearly right now have a window.
 It's not a large window.
 
-What would change about your approach if you focused on the incentives instead of the narrative?`,
+What would you do differently if you focused on the incentive structure instead of the narrative?`,
 
-`Hot take: most "lessons learned" posts are written for the writer, not the reader.
-Here's one that's actually useful.
+`Hot take: the "best practices" in this space are mostly cargo cult.
+People are copying the form without understanding the function.
 
 ${title}.
 
 ${summary}
 
-The real lesson isn't in the headline.
-It's in the decision that led to the outcome — and the assumption behind that decision.
+Here's what I keep seeing:
 
-Find the assumption. Question it.
-That's where the actual insight lives.
+Teams adopt the process that worked at Company X.
+But Company X had different constraints, different users, different data.
 
-What assumption in your current work are you least willing to question?`
+The process was a solution to a specific problem.
+Without that problem, it's just overhead.
+
+Copy the thinking. Not the output.
+
+What "best practice" in your current workflow exists because it worked somewhere else — and has never been validated for your specific situation?`
     ];
-
-    return `${templates[day % templates.length]}\n\n${hashtags}`;
+    return `${templates[day % templates.length]}${ending}`;
   }
 
+  // ── STORY ─────────────────────────────────────────────────────────────────
   if(S.style === 'story'){
-
     const templates = isProduct ? [
 `A founder shared their pivot story this week.
-One line stopped me completely.
+One line stopped me.
 
 ${title}.
 
 ${summary}
 
 "We had 10,000 users and zero product-market fit.
-Then we deleted everything except what our 10 best users used daily.
-Six months later we had 1,000 users and a real business."
+So we deleted every feature except what our 10 best users used daily.
+Six months later: 1,000 users, profitable, best retention we'd ever seen."
 
-Less is the move almost nobody is willing to make.
-Until they have to.
+Less is almost always the move.
+Almost nobody is willing to make it — until they have no other choice.
 
-What would you cut if you could only keep what your best users actually use?`,
+What would you cut if you could only keep what your best users use every single week?`,
 
 `Someone posted a teardown this week that I keep coming back to.
 
@@ -1593,7 +1636,7 @@ ${title}.
 
 ${summary}
 
-They tried 4 different GTM strategies in 18 months. None worked.
+They tried 4 different GTM motions in 18 months. None worked.
 Then they stopped trying to reach everyone and asked one question:
 "Who is the one person whose life we completely change?"
 
@@ -1612,31 +1655,36 @@ ${title}.
 
 ${summary}
 
-Six months ago this would have required a specialized team and months of work.
-This week someone built it in a weekend and open sourced it.
+Let me put the timeline in perspective:
 
-The thing that gets me isn't the technology.
-It's the pace.
+6 months ago → specialized team, months of work, not production-ready.
+3 months ago → closed beta, waitlist only.
+This week → open sourced, anyone can run it in under 5 minutes.
 
-Every week the ceiling moves. Every week "impressive" becomes "baseline."
+The thing that gets me isn't the technology itself.
+It's the compression of that timeline.
+
+Every week "impressive" becomes "baseline."
+Every week the gap between what's possible and what most teams are building widens.
 
 Are you building on today's ceiling — or last year's?`,
 
-`I saw something this week that I haven't been able to stop thinking about.
+`I saw something this week and I haven't been able to stop thinking about it.
 
 ${title}.
 
 ${summary}
 
-A year ago this was a research paper.
-Three months ago it was a closed beta.
-This week it shipped as an open source library anyone can use.
+A year ago this was a research paper that maybe 200 people read.
+Six months ago it was a closed demo at a conference.
+This week someone built it as a weekend project and open sourced it.
 
-The gap between "frontier research" and "weekend project" has never been smaller.
+The gap between "frontier research" and "available to every developer" has never been smaller.
+And it's still shrinking.
 
-We might actually be cooked — in the best way possible.
+We might actually be cooked — in the best possible way.
 
-What are you building that only became possible in the last 6 months?`
+What are you building today that only became possible in the last 6 months?`
 
     ] : [
 `Someone shared a story this week that reframed something I thought I understood.
@@ -1645,32 +1693,34 @@ ${title}.
 
 ${summary}
 
-The insight wasn't the technology or the strategy.
-It was the question they started with.
+The insight wasn't in the technology or the strategy.
+It was in the question they started with.
 
 "What would have to be true for this to be the most important thing we work on?"
 
 Most teams never ask that question.
-The ones that do build very differently.
+The ones that do build entirely differently — and it shows in the outcomes.
 
-What would have to be true for your current project to be the most important thing you could be working on?`,
+What would have to be true for your current project to be the most important thing you could work on right now?`,
 
-`A researcher posted something quietly this week.
-It deserved a lot more attention than it got.
+`A researcher posted something quietly last week.
+It deserved significantly more attention than it got.
 
 ${title}.
 
 ${summary}
 
-The finding isn't surprising once you see it.
-But most people in the industry are still operating as if the old assumption is true.
+The finding isn't surprising once you see it clearly.
+But most people in this space are still operating as if the old assumption holds.
 
-That gap — between what the evidence shows and what the industry believes — is where the next interesting companies get built.
+That gap — between what the evidence actually shows and what the industry believes — is exactly where the next interesting companies get built.
 
-What assumption in your industry is most overdue for a challenge?`
+The ones paying close attention right now will look prescient in 18 months.
+The ones who aren't will be explaining why they didn't see it coming.
+
+What assumption in your space is most overdue for a serious challenge?`
     ];
-
-    return `${templates[day % templates.length]}\n\n${hashtags}`;
+    return `${templates[day % templates.length]}${ending}`;
   }
 
   // Default
