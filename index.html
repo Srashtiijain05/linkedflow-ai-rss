@@ -1043,36 +1043,76 @@ const FEED_URLS={
 
 // ── RSS FETCH FUNCTION ────────────────────────────────────────────────────────
 async function fetchRSS(feedUrl) {
-  const FALLBACK = [
-    { title: "AI Is Transforming How Businesses Operate in 2026", description: "73% of enterprises have integrated AI into core workflows, with productivity gains averaging 34% across knowledge workers. Early adopters are pulling ahead.", link: "", pubDate: "" },
-    { title: "The Future of Remote Work: What Leaders Need to Know", description: "Organizations embracing async-first culture see 28% better retention. Companies offering flexibility are attracting top talent in competitive markets.", link: "", pubDate: "" },
-    { title: "Why Most Digital Transformations Fail — And How to Fix Yours", description: "McKinsey reveals 70% of digital transformation initiatives fall short. The key differentiator is leadership alignment, not technology investment.", link: "", pubDate: "" },
-    { title: "The Skills That Will Matter Most in the Age of AI", description: "Critical thinking, creativity, and emotional intelligence are becoming the most valuable skills as AI automates routine cognitive tasks.", link: "", pubDate: "" },
-    { title: "How Top Startups Are Building Products Users Love", description: "The most successful startups share one trait: obsessive focus on solving a real problem for a specific user before scaling aggressively.", link: "", pubDate: "" },
-    { title: "Leadership in Uncertain Times: What the Data Shows", description: "New research across 500 companies shows that transparent communication and psychological safety are the top predictors of team performance.", link: "", pubDate: "" },
-    { title: "The Real ROI of Investing in Employee Development", description: "Companies that invest in learning and development see 24% higher profit margins and significantly lower turnover than industry peers.", link: "", pubDate: "" },
-  ];
+  // Helper: fetch with timeout
+  const timedFetch = (url, ms=6000) => {
+    const p1 = fetch(url, {mode:'cors'});
+    const p2 = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')),ms));
+    return Promise.race([p1,p2]);
+  };
 
-  // Try hnrss (3s timeout) — best CORS-friendly source
+  // Parse items from rss2json or hnrss response
+  const parseItems = (data) => {
+    if(!data || !data.items || !data.items.length) return [];
+    return data.items.map(item => ({
+      title:       (item.title||'').replace(/<[^>]+>/g,'').trim(),
+      description: (item.description||item.content||item.summary||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim().substring(0,400),
+      link:        item.link || item.url || '',
+      pubDate:     item.pubDate || item.published || ''
+    })).filter(i => i.title.length > 10);
+  };
+
+  console.log("Fetching RSS:", feedUrl);
+
+  // Try 1: Direct fetch (works for hnrss.org — no CORS issues)
+  if(feedUrl.includes('hnrss.org')){
+    try {
+      const res  = await timedFetch(feedUrl, 6000);
+      const data = await res.json();
+      const items = parseItems(data);
+      if(items.length > 0){ console.log("HN RSS OK:", items.length); return items; }
+    } catch(e){ console.log("HN fetch failed:", e.message); }
+  }
+
+  // Try 2: rss2json proxy (for Wired, Verge, MIT, DeepMind etc.)
+  if(feedUrl.includes('rss2json.com')){
+    try {
+      const res  = await timedFetch(feedUrl, 6000);
+      const data = await res.json();
+      const items = parseItems(data);
+      if(items.length > 0){ console.log("rss2json OK:", items.length); return items; }
+    } catch(e){ console.log("rss2json fetch failed:", e.message); }
+  }
+
+  // Try 3: Wrap any raw RSS URL through rss2json proxy
+  if(!feedUrl.includes('rss2json.com') && !feedUrl.includes('hnrss.org')){
+    try {
+      const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
+      const res  = await timedFetch(proxyUrl, 6000);
+      const data = await res.json();
+      const items = parseItems(data);
+      if(items.length > 0){ console.log("proxy OK:", items.length); return items; }
+    } catch(e){ console.log("proxy failed:", e.message); }
+  }
+
+  // Try 4: HN best as universal fallback (always works)
   try {
-    const fetchPromise = fetch("https://hnrss.org/best");
-    const timeoutPromise = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 3000));
-    const res  = await Promise.race([fetchPromise, timeoutPromise]);
+    const res  = await timedFetch("https://hnrss.org/best", 5000);
     const data = await res.json();
-    if(data.items && data.items.length > 0){
-      console.log("RSS loaded from HN:", data.items.length);
-      return data.items.map(item => ({
-        title:       item.title || "",
-        description: (item.description || "").replace(/<[^>]+>/g,"").substring(0,400),
-        link:        item.link || "",
-        pubDate:     item.pubDate || ""
-      })).filter(i => i.title.length > 10);
-    }
-  } catch(e){ console.log("HN fetch skipped:", e.message); }
+    const items = parseItems(data);
+    if(items.length > 0){ console.log("HN fallback OK:", items.length); return items; }
+  } catch(e){ console.log("HN fallback failed:", e.message); }
 
-  // Instant fallback — always works
+  // Final hardcoded fallback — never fails
   console.log("Using built-in articles");
-  return FALLBACK;
+  return [
+    { title: "Meta Releases Llama 4 — Open Source Just Caught Up to GPT-4", description: "Llama 4's mixture-of-experts architecture matches closed frontier models on most benchmarks. The open source vs closed model debate just got more interesting.", link:"", pubDate:"" },
+    { title: "Mamba Architecture Is Replacing Transformers in Production", description: "State space models process sequences in O(n) instead of O(n²). For long context tasks, the performance difference is an order of magnitude.", link:"", pubDate:"" },
+    { title: "LangGraph Is Replacing LangChain for Production AI Agents", description: "Stateful, cyclical graphs instead of linear chains. The mental model shift is significant — and the production stability difference is even more so.", link:"", pubDate:"" },
+    { title: "Why the Best Engineers Are Learning to Write Better", description: "In an AI-assisted world, the person who specifies what they want precisely is the one who ships. Writing is now a core engineering skill.", link:"", pubDate:"" },
+    { title: "The Context Window Is Now a Design Surface — Not Just a Limit", description: "With 1M+ token windows, the constraint has flipped. The hard problem is now what to put in context, not whether it fits.", link:"", pubDate:"" },
+    { title: "DSPy: The Framework That's Killing Hand-Written Prompts", description: "Compile your prompts instead of writing them. DSPy optimizes prompts automatically using your data. The prompting-as-code paradigm is here.", link:"", pubDate:"" },
+    { title: "Open Source AI Is Closing the Gap With Closed Models Faster Than Expected", description: "Six months ago open source models were 18 months behind frontier. Today that gap is closer to 6 months — and in some benchmarks already closed.", link:"", pubDate:"" },
+  ];
 }
 
 // ── STATE ────────────────────────────────────────────────────────────────────
