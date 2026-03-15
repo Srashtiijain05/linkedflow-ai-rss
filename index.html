@@ -508,49 +508,66 @@ input:checked ~ .toggle-dot{transform:translateX(18px);background:var(--nova);bo
         <button class="feed-cat active" onclick="filterFeeds('all',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid rgba(0,212,255,0.3);background:rgba(0,212,255,0.1);color:var(--glow);cursor:pointer;font-family:inherit">All</button>
         <button class="feed-cat" onclick="filterFeeds('tech',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">⚡ Tech</button>
         <button class="feed-cat" onclick="filterFeeds('ai',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">🧠 AI</button>
+        <button class="feed-cat" onclick="filterFeeds('fw',this)" style="font-size:0.6rem;font-weight:700;padding:3px 9px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-family:inherit">⚙️ Frameworks</button>
       </div>
 
       <div id="feedBtns">
         <!-- TECH -->
         <button class="feed-item-btn active" data-cat="tech" onclick="pickFeed(this,'tech')">
           <span class="fi-icon">🔶</span>
-          <div><div class="fi-name">Hacker News Top</div><div class="fi-url">hnrss.org/frontpage</div></div>
+          <div><div class="fi-name">HN — Latest</div><div class="fi-url">New launches & releases</div></div>
           <span class="fi-live">LIVE</span>
         </button>
         <button class="feed-item-btn" data-cat="tech" onclick="pickFeed(this,'hn')">
           <span class="fi-icon">⭐</span>
-          <div><div class="fi-name">HN Best Stories</div><div class="fi-url">hnrss.org/best</div></div>
-          <span class="fi-live">LIVE</span>
-        </button>
-        <button class="feed-item-btn" data-cat="tech" onclick="pickFeed(this,'wired')">
-          <span class="fi-icon">🔌</span>
-          <div><div class="fi-name">Wired</div><div class="fi-url">wired.com/feed/rss</div></div>
+          <div><div class="fi-name">HN — Best</div><div class="fi-url">Top stories today</div></div>
           <span class="fi-live">LIVE</span>
         </button>
         <button class="feed-item-btn" data-cat="tech" onclick="pickFeed(this,'verge')">
           <span class="fi-icon">📱</span>
-          <div><div class="fi-name">The Verge</div><div class="fi-url">theverge.com/rss</div></div>
+          <div><div class="fi-name">The Verge</div><div class="fi-url">Tech product news</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="tech" onclick="pickFeed(this,'wired')">
+          <span class="fi-icon">🔌</span>
+          <div><div class="fi-name">Wired</div><div class="fi-url">Deep tech stories</div></div>
           <span class="fi-live">LIVE</span>
         </button>
         <!-- AI -->
         <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'ai')">
-          <span class="fi-icon">🧠</span>
-          <div><div class="fi-name">HN — AI & ML</div><div class="fi-url">hnrss.org · AI filter</div></div>
+          <span class="fi-icon">🚀</span>
+          <div><div class="fi-name">HN — New AI Models</div><div class="fi-url">Model releases & launches</div></div>
           <span class="fi-live">LIVE</span>
         </button>
-        <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'aitools')">
-          <span class="fi-icon">⚡</span>
-          <div><div class="fi-name">HN — LLMs & Tools</div><div class="fi-url">hnrss.org · LLM filter</div></div>
+        <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'llm')">
+          <span class="fi-icon">🧠</span>
+          <div><div class="fi-name">HN — LLMs</div><div class="fi-url">GPT · Claude · Gemini · Llama</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'aiarch')">
+          <span class="fi-icon">🏗️</span>
+          <div><div class="fi-name">HN — Architecture</div><div class="fi-url">Transformers · Neural nets</div></div>
           <span class="fi-live">LIVE</span>
         </button>
         <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'mit')">
           <span class="fi-icon">🔬</span>
-          <div><div class="fi-name">MIT Tech Review</div><div class="fi-url">technologyreview.com</div></div>
+          <div><div class="fi-name">MIT Tech Review</div><div class="fi-url">AI research & analysis</div></div>
           <span class="fi-live">LIVE</span>
         </button>
         <button class="feed-item-btn" data-cat="ai" onclick="pickFeed(this,'deepmind')">
           <span class="fi-icon">🤖</span>
-          <div><div class="fi-name">DeepMind Blog</div><div class="fi-url">deepmind.google</div></div>
+          <div><div class="fi-name">DeepMind Blog</div><div class="fi-url">Frontier AI research</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <!-- FRAMEWORKS -->
+        <button class="feed-item-btn" data-cat="fw" onclick="pickFeed(this,'frameworks')">
+          <span class="fi-icon">⚙️</span>
+          <div><div class="fi-name">HN — Frameworks</div><div class="fi-url">New libs & open source</div></div>
+          <span class="fi-live">LIVE</span>
+        </button>
+        <button class="feed-item-btn" data-cat="fw" onclick="pickFeed(this,'devtools')">
+          <span class="fi-icon">🛠️</span>
+          <div><div class="fi-name">HN — Dev Tools</div><div class="fi-url">SDKs · APIs · launches</div></div>
           <span class="fi-live">LIVE</span>
         </button>
       </div>
@@ -1001,17 +1018,22 @@ Agree? Or am I wrong about where the value actually concentrates first?
 
 // ── RSS FEED URLs ─────────────────────────────────────────────────────────────
 const FEED_URLS={
-  // ⚡ TECH
+  // ⚡ TECH — Latest releases & launches
   tech:       'https://hnrss.org/frontpage',
   hn:         'https://hnrss.org/best',
-  wired:      'https://api.rss2json.com/v1/api.json?rss_url=https://www.wired.com/feed/rss',
   verge:      'https://api.rss2json.com/v1/api.json?rss_url=https://www.theverge.com/rss/index.xml',
+  wired:      'https://api.rss2json.com/v1/api.json?rss_url=https://www.wired.com/feed/rss',
 
-  // 🧠 AI
-  ai:         'https://hnrss.org/frontpage?q=AI+machine+learning',
-  aitools:    'https://hnrss.org/frontpage?q=LLM+GPT+Claude+AI+tools',
+  // 🧠 AI Models & Research
+  ai:         'https://hnrss.org/frontpage?q=AI+model+release',
+  llm:        'https://hnrss.org/frontpage?q=LLM+GPT+Claude+Gemini+Llama',
+  aiarch:     'https://hnrss.org/frontpage?q=AI+architecture+transformer+neural',
   mit:        'https://api.rss2json.com/v1/api.json?rss_url=https://www.technologyreview.com/feed/',
   deepmind:   'https://api.rss2json.com/v1/api.json?rss_url=https://deepmind.google/blog/rss.xml',
+
+  // 🔧 Frameworks & Tools
+  frameworks: 'https://hnrss.org/frontpage?q=framework+library+open+source+release',
+  devtools:   'https://hnrss.org/frontpage?q=developer+tools+SDK+API+launch',
 };
 
 // ── RSS FETCH FUNCTION ────────────────────────────────────────────────────────
