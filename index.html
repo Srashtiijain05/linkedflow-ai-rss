@@ -1181,49 +1181,290 @@ function makePost(item){
   const txt     = (title + ' ' + summary).toLowerCase();
 
   // ── TOPIC DETECTION ───────────────────────────────────────────────────────
-  const isAI        = txt.includes('ai') || txt.includes('model') || txt.includes('llm') || txt.includes('gpt') || txt.includes('claude') || txt.includes('gemini');
-  const isProduct   = txt.includes('product') || txt.includes('startup') || txt.includes('founder') || txt.includes('user') || txt.includes('scale');
-  const isFramework = txt.includes('framework') || txt.includes('library') || txt.includes('tool') || txt.includes('open source') || txt.includes('github');
-  const isResearch  = txt.includes('research') || txt.includes('paper') || txt.includes('study') || txt.includes('data show') || txt.includes('benchmark');
-  const isCareer    = txt.includes('career') || txt.includes('skill') || txt.includes('hiring') || txt.includes('developer') || txt.includes('engineer');
+  const isLeadership = txt.includes('leader') || txt.includes('manag') || txt.includes('psycholog') || txt.includes('culture') || txt.includes('uncertain') || txt.includes('communication') || txt.includes('trust') || txt.includes('organization') || txt.includes('transparent');
+  const isAIModel    = txt.includes('gpt') || txt.includes('claude') || txt.includes('gemini') || txt.includes('llama') || txt.includes('mistral') || txt.includes('llm') || txt.includes('language model');
+  const isAIArch     = txt.includes('architecture') || txt.includes('transformer') || txt.includes('mamba') || txt.includes('moe') || txt.includes('neural');
+  const isProduct    = txt.includes('product') || txt.includes('startup') || txt.includes('founder') || txt.includes('pmf') || txt.includes('scale') || txt.includes('user') || txt.includes('ship');
+  const isFramework  = txt.includes('framework') || txt.includes('library') || txt.includes('langgraph') || txt.includes('langchain') || txt.includes('dspy') || txt.includes('ollama');
+  const isAgent      = txt.includes('agent') || txt.includes('agentic') || txt.includes('multi-agent') || txt.includes('autonomous');
+  const isGenAI      = isAIModel || isAIArch || isAgent || isFramework || (txt.includes('ai') && !isLeadership);
 
-  // ── SMART HASHTAGS — combine ALL matching rules ───────────────────────────
-  const tagRules = [
-    { cond: txt.includes('openai') || txt.includes('gpt'),             tags: ['#OpenAI','#GenerativeAI','#LLMs'] },
-    { cond: txt.includes('claude') || txt.includes('anthropic'),       tags: ['#Anthropic','#GenerativeAI','#LLMs'] },
-    { cond: txt.includes('gemini') || txt.includes('google deepmind'), tags: ['#GoogleAI','#GenerativeAI','#LLMs'] },
-    { cond: txt.includes('llama') || txt.includes('meta ai'),          tags: ['#MetaAI','#OpenSourceAI','#LLMs'] },
-    { cond: txt.includes('mistral') || txt.includes('mixtral'),        tags: ['#Mistral','#OpenSourceAI','#LLMs'] },
-    { cond: txt.includes('agent') || txt.includes('agentic'),          tags: ['#AIAgents','#GenerativeAI'] },
-    { cond: txt.includes('rag') || txt.includes('retrieval'),          tags: ['#RAG','#AIEngineering'] },
-    { cond: txt.includes('architecture') || txt.includes('transformer'),tags: ['#AIArchitecture','#DeepLearning'] },
-    { cond: isFramework && isAI,                                        tags: ['#AIFrameworks','#LLMOps','#AIEngineering'] },
-    { cond: isProduct && isAI,                                          tags: ['#AIProduct','#ProductThinking','#BuildInPublic'] },
-    { cond: isProduct && !isAI,                                         tags: ['#ProductThinking','#StartupLife','#BuildInPublic'] },
-    { cond: isCareer && isAI,                                           tags: ['#AIEngineering','#TechCareers','#SoftwareEngineering'] },
-    { cond: isResearch && isAI,                                         tags: ['#AIResearch','#MachineLearning'] },
-    { cond: isAI,                                                        tags: ['#AI','#GenerativeAI'] },
-    { cond: true,                                                        tags: ['#Tech','#Innovation'] },
-  ];
+  // ── AUDIENCE-FIRST HASHTAGS ───────────────────────────────────────────────
+  let hashtags = '';
+  if(isLeadership && !isGenAI)         hashtags = '#Leadership #FutureOfWork #OrganizationalCulture #PsychologicalSafety';
+  else if(isAgent)                      hashtags = '#AIAgents #GenerativeAI #AIStrategy #TechLeadership';
+  else if(isAIModel)                    hashtags = '#GenerativeAI #AIStrategy #TechLeadership #LLMs';
+  else if(isAIArch)                     hashtags = '#AIStrategy #GenerativeAI #TechLeadership #DigitalTransformation';
+  else if(isFramework)                  hashtags = '#AIStrategy #BuildInPublic #TechLeadership #GenerativeAI';
+  else if(isProduct && isGenAI)         hashtags = '#AIProduct #ProductThinking #BuildInPublic #GenerativeAI';
+  else if(isProduct)                    hashtags = '#ProductThinking #StartupLife #BuildInPublic #TechLeadership';
+  else if(isGenAI)                      hashtags = '#AIStrategy #GenerativeAI #TechLeadership #DigitalTransformation';
+  else                                  hashtags = '#TechLeadership #Innovation #FutureOfWork #DigitalTransformation';
 
-  let allTags = [];
-  for(const rule of tagRules){
-    if(rule.cond){ allTags.push(...rule.tags); }
-    if(allTags.length >= 8) break;
+  const ending = '\n\n' + hashtags;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // STORY STYLE — "Real person + Real demo + Emotional reaction"
+  // FORMAT: Named person → What they built → Specific detail → Past vs now → Reaction
+  // ─────────────────────────────────────────────────────────────────────────
+  if(S.style === 'story'){
+
+    // Named people bank — rotates daily
+    const names = [
+      { name: 'A developer named Rohan', role: 'posted a demo' },
+      { name: 'An engineer named Sarah', role: 'just shared something' },
+      { name: 'A researcher named Priya', role: 'shared a thread' },
+      { name: 'A builder named Arjun', role: 'posted a teardown' },
+      { name: 'A founder named Neha', role: 'shared a breakdown' },
+      { name: 'A developer named Liam', role: 'just open sourced something' },
+    ];
+    const person = names[day % names.length];
+
+    const reactions = [
+      `The speed of progress here is honestly insane.\n\nWe might actually be cooked.`,
+      `Just a year ago this would have been a funded PhD project.\nNow it's a weekend build.\n\nThe gap between "research" and "anyone can build this" has never been smaller.`,
+      `Six months ago most people were still figuring out basic prompting.\nNow we're watching this happen in real time.\n\nThe compounding is real. And it's not slowing down.`,
+      `A year ago this required a specialized team and months of runway.\nThis week someone built it alone and open sourced it.\n\nWe might actually be cooked — in the best possible way.`,
+      `The thing that gets me isn't the technology.\nIt's the timeline.\n\nEvery week the ceiling moves. Every week "impressive" becomes "baseline."`,
+    ];
+
+    if(isAgent){
+      const agentTemplates = [
+`${person.name} ${person.role} this week that stopped my scroll.
+
+${title}.
+
+AI agents that ${summary.toLowerCase().replace(/\.$/, '')} — without any human in the loop.
+
+Just a year ago most people were still using AI like a fancy search engine.
+Now we're watching agents organize themselves, coordinate work, and collaborate like real teams.
+
+${reactions[day % reactions.length]}
+
+What's the most surprising thing you've seen AI agents do this week?`,
+
+`${person.name} built something this week that I keep going back to.
+
+${title}.
+
+${summary}
+
+The demo lasted 3 minutes.
+By the end of it I had to close my laptop and take a walk.
+
+This is not the AI we were promised in science fiction.
+This is something stranger and faster and more immediate.
+
+Just a year ago we were impressed by autocomplete.
+Now we're watching agents run their own meetings.
+
+The speed of this is honestly insane.
+
+Are you building with agents yet — or still watching from the sidelines?`,
+      ];
+      return `${agentTemplates[day % agentTemplates.length]}${ending}`;
+    }
+
+    if(isAIModel || isFramework || isAIArch){
+      const aiTemplates = [
+`${person.name} ${person.role} this week and I haven't been able to stop thinking about it.
+
+${title}.
+
+${summary}
+
+Let me put the timeline in perspective:
+
+6 months ago → closed research project, not accessible.
+3 months ago → limited beta, waitlist only.
+This week → open sourced. Anyone can run it in under 5 minutes.
+
+The gap between "frontier research" and "anyone can build with this" has never closed faster.
+
+${reactions[day % reactions.length]}
+
+What are you building today that only became possible in the last 6 months?`,
+
+`${person.name} dropped something this week that I almost scrolled past.
+I'm glad I didn't.
+
+${title}.
+
+${summary}
+
+Six months ago this would have needed a team of specialists and months of compute budget.
+This week: weekend project, open sourced, 200 GitHub stars in 24 hours.
+
+The thing that gets me isn't the capability.
+It's the pace.
+
+Just a year ago we were treating these tools as experiments.
+Now they're production infrastructure.
+
+${reactions[(day+1) % reactions.length]}
+
+Are you building on today's capabilities — or still planning around last year's constraints?`,
+      ];
+      return `${aiTemplates[day % aiTemplates.length]}${ending}`;
+    }
+
+    if(isProduct){
+      const productTemplates = [
+`${person.name} shared their build story this week.
+One line stopped me completely.
+
+${title}.
+
+${summary}
+
+"We stopped trying to build for everyone.
+We picked one person with one problem and solved it completely.
+Everything changed after that."
+
+The simplest insight in product. Also the hardest to actually do.
+
+Most teams know this. Almost none of them act on it until they're forced to.
+
+Who is the one specific person your product exists for right now?`,
+
+`${person.name} ${person.role} about their pivot this week.
+I've been thinking about it since.
+
+${title}.
+
+${summary}
+
+They had all the metrics. Users. Revenue. Growth.
+But their best customers were accidentally finding value they never designed for.
+
+So they stopped. Talked to those customers. Rebuilt around what those customers actually needed.
+
+Six months later: half the features, double the retention.
+
+Less is almost always the move.
+Almost nobody makes it voluntarily.
+
+What would you cut if you could only keep what your best users use every week?`,
+      ];
+      return `${productTemplates[day % productTemplates.length]}${ending}`;
+    }
+
+    if(isLeadership && !isGenAI){
+      const leaderTemplates = [
+`${person.name} shared something in a thread this week that I keep coming back to.
+
+${title}.
+
+${summary}
+
+They changed one thing about how they ran their team meetings.
+Instead of starting with status updates, they started with one question:
+
+"What's something you've been uncertain about that you haven't said out loud yet?"
+
+Within a month: three major blockers surfaced that had been silently slowing the team down for quarters.
+
+The information was always there.
+Nobody felt safe enough to say it.
+
+What question could you ask your team this week that would surface what's not being said?`,
+      ];
+      return `${leaderTemplates[day % leaderTemplates.length]}${ending}`;
+    }
+
+    // Generic story
+    const genericTemplates = [
+`${person.name} ${person.role} this week that reframed something I thought I understood.
+
+${title}.
+
+${summary}
+
+The insight wasn't in the headline.
+It was in the question they started with before building anything:
+
+"What would have to be true for this to be the most important thing we work on?"
+
+Most teams never ask that question.
+The ones that do build very differently.
+
+What would have to be true for your current project to be the most important thing you could work on?`,
+    ];
+    return `${genericTemplates[0]}${ending}`;
   }
-  const hashtags = [...new Set(allTags)].slice(0, 4).join(' ');
-  const ending   = '\n\n' + hashtags;
 
   // ─────────────────────────────────────────────────────────────────────────
-  // HPC FORMAT
-  // HOOK   → 1-2 lines. Bold claim or tension. Stops the scroll.
-  // PLOT   → Title + summary + 2-3 specific bridge lines. Builds context.
-  // CLIMAX → Sharp insight or reframe. ONE closing question.
+  // HPC FORMAT — AUTHORITY, EDUCATIONAL, OPINION
   // ─────────────────────────────────────────────────────────────────────────
 
-  // ── AUTHORITY ─────────────────────────────────────────────────────────────
   if(S.style === 'authority'){
-    const templates = isProduct ? [
+    if(isLeadership && !isGenAI){
+      const t = [
+`Most leadership advice is written for stable times.
+Almost none of it is written for right now.
+
+${title}.
+
+${summary}
+
+Here's what the research shows about leaders who actually perform in uncertainty:
+
+→ They over-communicate context, not just decisions
+→ They create psychological safety before demanding accountability
+→ They explicitly separate "what we know" from "what we're betting on"
+
+The leaders building the most resilient teams aren't the most confident.
+They're the most honest about what they don't know yet.
+
+How clearly does your team understand the difference between your certainties and your current bets?`,
+
+`The data on high-performing teams is consistent.
+Most managers are ignoring the most important variable.
+
+${title}.
+
+${summary}
+
+Across 500+ companies, research keeps finding the same thing:
+Psychological safety predicts team performance more reliably than talent, process, or compensation.
+
+Not because safety is soft.
+Because people don't take risks, share bad news, or admit mistakes in unsafe environments.
+And teams that can't do those three things can't learn. Teams that can't learn can't adapt.
+
+The best leaders don't manage performance directly.
+They architect the conditions where performance becomes the natural outcome.
+
+What's one thing you could change this week to make your team feel safer to speak up?`,
+      ];
+      return `${t[day % t.length]}${ending}`;
+    }
+
+    if(isAgent){
+      const t = [
+`Most teams are still thinking about AI as a tool.
+The ones pulling ahead are building with AI as a teammate.
+
+${title}.
+
+${summary}
+
+Think about what just changed:
+
+Six months ago "agentic AI" was a conference talk.
+Today it's a production architecture decision.
+In six months, teams without an agent strategy will be explaining why to their boards.
+
+The difference between those teams isn't budget or talent.
+It's whether they updated their mental model when the evidence changed.
+
+What's the one task in your team's workflow that an agent could own end-to-end right now?`,
+      ];
+      return `${t[0]}${ending}`;
+    }
+
+    if(isProduct){
+      const t = [
 `Most products don't fail because of bad execution.
 They fail because of good execution on the wrong problem.
 
@@ -1234,145 +1475,91 @@ ${summary}
 The research on this is consistent:
 
 → 42% of startups fail because there was no market need — not because the product was bad
-→ Companies that talk to users weekly are 3x more likely to reach product-market fit
+→ Teams that talk to users weekly are 3x more likely to reach product-market fit
 → The top retention signal isn't NPS — it's whether users would be "very disappointed" without your product
 
 The companies that scale aren't the ones who moved fastest.
 They're the ones who got obsessively specific — one user, one problem, one moment.
 
-The question that changes everything:
 Who is the one specific person your product exists for?`,
+      ];
+      return `${t[0]}${ending}`;
+    }
 
-`The best founders I know are not the smartest people in the room.
-They are the most specific.
-
-${title}.
-
-${summary}
-
-Here's what separates the products that scale from the ones that stall:
-
-The ones that scale solve one painful problem completely for one specific person.
-The ones that stall solve three medium problems partially for a vague audience.
-
-Specificity isn't a constraint. It's a strategy.
-
-What would you stop building if you had to get 10x more specific about who you're building for?`
-
-    ] : isAI ? [
-`Most teams are reacting to AI.
+    // Generic AI authority
+    const t = [
+`Most teams are reacting to this.
 The ones pulling ahead are designing for it.
 
 ${title}.
 
 ${summary}
 
-Think about the timeline here:
+Think about the timeline:
 
 Six months ago this was an edge case.
 Today it's table stakes.
 In six more months, teams without it will be explaining why.
 
-The difference between those teams isn't budget or talent.
+The difference between those teams isn't budget or headcount.
 It's whether they updated their priors when the evidence changed.
 
-The window to get ahead of this is open.
-It's closing faster than most roadmaps acknowledge.
-
 What's the one assumption in your current stack this invalidates?`,
-
-`The gap isn't talent.
-The gap is timing.
-
-${title}.
-
-${summary}
-
-The teams that will look smart in 18 months aren't the most resourced.
-They're the ones who updated their architecture when the capabilities changed — not after everyone else did.
-
-Here's the hard truth:
-→ Last year's AI assumptions are already outdated
-→ The performance floor moved significantly — use cases that were unreliable are now production-ready
-→ The teams rearchitecting now will have a 12-month head start
-
-Is your team building on today's capabilities — or last year's constraints?`
-
-    ] : isFramework ? [
-`The tools you choose don't determine what you build.
-They determine how fast you discover what's wrong.
-
-${title}.
-
-${summary}
-
-Here's what the teams shipping the most reliable AI have in common:
-
-They don't adopt frameworks to go faster.
-They adopt frameworks to fail faster — in development, not production.
-
-The distinction sounds small. The outcomes are not.
-
-→ Fast failure in dev = cheap learning
-→ Fast failure in prod = expensive incident
-
-What's the failure mode you haven't deliberately tested yet?`,
-
-`The framework wars are a distraction.
-The real question is: what does this make possible that wasn't before?
-
-${title}.
-
-${summary}
-
-Every major tooling shift in tech history followed the same pattern:
-Optional → Useful → Standard → Required
-
-The teams that wait for "Required" spend the next 18 months catching up.
-
-The teams that move at "Useful" define what the next 18 months looks like.
-
-Which stage is your team currently at?`
-
-    ] : [
-`Everyone sees the headline.
-Almost nobody asks the right second question.
-
-${title}.
-
-${summary}
-
-The surface story is interesting.
-The second-order question is what actually matters:
-
-What does this change about the decisions I'm making this quarter?
-
-The teams winning right now aren't the fastest movers.
-They're the ones asking better questions earlier.
-
-What's the question this raises for your team?`,
-
-`The story isn't the news.
-The story is what the news reveals about where things are heading.
-
-${title}.
-
-${summary}
-
-Most people read this and react.
-The interesting move is to ask: what would I do differently if I fully believed this was as significant as it appears?
-
-That question changes your roadmap.
-Very few people actually answer it honestly.
-
-What would you do differently?`
     ];
-    return `${templates[day % templates.length]}${ending}`;
+    return `${t[0]}${ending}`;
   }
 
-  // ── EDUCATIONAL ───────────────────────────────────────────────────────────
   if(S.style === 'educational'){
-    const templates = isProduct ? [
+    if(isLeadership && !isGenAI){
+      const t = [
+`The research on team performance is surprisingly consistent.
+Most managers are still acting on intuition instead.
+
+${title}.
+
+${summary}
+
+Three findings that should change how you run your team:
+
+1. Psychological safety predicts innovation output better than any factor measured
+2. Leaders who share uncertainty openly get higher-quality information from their teams
+3. Weekly 1:1s focused on blockers — not status updates — reduce attrition by 30%
+
+None of this is complicated.
+Almost nobody does all three consistently.
+
+Which one would make the biggest difference in your team right now?`,
+      ];
+      return `${t[0]}${ending}`;
+    }
+
+    if(isAgent){
+      const t = [
+`Most people are building agents the hard way.
+Here's the mental model that makes it click.
+
+${title}.
+
+${summary}
+
+The three-layer model for reliable agents:
+
+1. Perception → what information does the agent have access to?
+2. Reasoning → what framework does it use to decide what to do?
+3. Action → what can it actually change in the world?
+
+Most agent failures happen at layer 1 (bad context) or layer 3 (too many permissions).
+The reasoning layer gets the blame but it's rarely the cause.
+
+Fix the inputs. Constrain the actions. The reasoning usually handles itself.
+
+Where is your current agent breaking down?`,
+      ];
+      return `${t[0]}${ending}`;
+    }
+
+    if(isProduct){
+      const t = [
 `Nobody teaches product teams how to find the right problem.
 They just say "talk to users" and hope for the best.
 
@@ -1384,32 +1571,17 @@ Here's what "talk to users" actually means in practice:
 
 → Ask about their last frustrating experience — not what features they want
 → Look for the problem behind the problem they describe first
-→ Find the person who would pay today, not "someday when it has X feature"
+→ Find the person who would pay today, not "someday when it has X"
 
 Most teams do interviews. Very few do this.
 The ones that do find their real customer 3x faster.
 
 Which of these is missing from your current discovery process?`,
+      ];
+      return `${t[0]}${ending}`;
+    }
 
-`The product metrics most teams track are the wrong ones.
-Here's what the best teams measure instead.
-
-${title}.
-
-${summary}
-
-Three metrics that actually predict long-term success:
-
-1. Time to first value — not time to first signup (they're very different)
-2. Session depth on day 7 — not day 1 activation (anyone can optimize onboarding)
-3. Voluntary word-of-mouth rate — not NPS (people lie on surveys, they don't lie with referrals)
-
-The metrics you choose shape the product you build.
-Most teams are unknowingly optimizing for vanity, not retention.
-
-Which metric is quietly misleading your team's decisions right now?`
-
-    ] : isAI ? [
+    const t = [
 `Most AI projects don't fail because of bad models.
 They fail because nobody defined what "good" actually looks like.
 
@@ -1417,122 +1589,68 @@ ${title}.
 
 ${summary}
 
-Let that sink in for a second — then consider what it means:
+The mental model that changes how you build:
+
+→ Without evals → guessing if it works
+→ Basic evals → know when it breaks
+→ Good evals → improve systematically, ship with confidence
 
 Build your evaluation before you build your pipeline.
-Know what "correct" means before you optimize for it.
-Define your failure modes before they define your post-mortem.
+The teams at level 3 aren't smarter — they just started backwards.
 
-The teams shipping reliable AI are not smarter.
-They're just not discovering their assumptions in production.
-
-Here's the difference:
-→ Without evals: you're guessing if it works
-→ With good evals: you can improve it systematically and ship with confidence
-
-What's your current definition of "good" for the AI feature you're building?`,
-
-`The difference between an AI demo and an AI product is one thing.
-Not the model. Not the infrastructure. Evals.
-
-${title}.
-
-${summary}
-
-Here's the breakdown most engineers learn the hard way:
-
-→ Skip evals → discover failure modes in production (expensive)
-→ Basic evals → know when it breaks (better, still reactive)
-→ Good evals → improve systematically, ship confidently (the goal)
-
-The teams at level 3 aren't smarter. They just started with the eval harness and built backwards.
-
-Most teams start with the feature and add evals later.
-"Later" usually means "after the first production incident."
-
-Which level is your team at right now?`
-
-    ] : [
-`The most valuable skill in tech right now isn't coding faster.
-It's knowing which problems are actually worth solving.
-
-${title}.
-
-${summary}
-
-Here's the framework I keep coming back to:
-
-Before your next sprint, ask three questions:
-1. Is this the most important problem right now — or just the most visible?
-2. What breaks if we solve this the wrong way?
-3. Who is the specific person who genuinely wins if we get this exactly right?
-
-The answers will change what you build.
-Almost nobody asks all three before writing a single line of code.
-
-Which question does your team consistently skip?`,
-
-`Great engineers and average engineers use the same tools.
-They ask different questions.
-
-${title}.
-
-${summary}
-
-The question most engineers ask: "How do I build this?"
-The question great engineers ask first: "Should we build this at all?"
-
-Then: "What does 'done' actually look like for the person using this?"
-Then: "What's the failure mode we haven't thought through yet?"
-
-The answers to those three questions change everything about the execution.
-
-Which question are you skipping most often right now?`
+Which level is your team at right now?`,
     ];
-    return `${templates[day % templates.length]}${ending}`;
+    return `${t[0]}${ending}`;
   }
 
-  // ── OPINION ───────────────────────────────────────────────────────────────
   if(S.style === 'opinion'){
-    const templates = isProduct ? [
-`Hot take: "product-market fit" is the most misused phrase in tech.
-Here's what it actually means — and why most teams don't have it yet.
+    if(isLeadership && !isGenAI){
+      const t = [
+`Hot take: psychological safety isn't a "nice to have."
+It's the most underinvested performance lever in most organizations.
 
 ${title}.
 
 ${summary}
 
-PMF isn't a metric. It's a moment.
-It's when one specific person genuinely cannot imagine going back to life without your product.
+The data is unambiguous at this point.
+Teams with high psychological safety outperform on every dimension: innovation, retention, speed.
 
-Not "a lot of people kind of like it."
-Not "our retention is okay."
-One person. Cannot imagine going back.
+But most organizations treat it as a culture initiative — separate from performance.
+That's the mistake.
 
-If you can't name that person right now — you're still looking.
-And that's okay. But stop calling it PMF.
+Safety isn't opposed to accountability.
+Safety is what makes honest accountability possible.
 
-Disagree? I'd genuinely like to hear the counterargument.`,
+What would your team say if they felt completely safe to say it?`,
+      ];
+      return `${t[0]}${ending}`;
+    }
 
-`Unpopular opinion: most startups scale too early.
-Not too slowly. Too early.
+    if(isAgent){
+      const t = [
+`Hot take: we're underestimating how fast agents are going to change how teams work.
+Not in a vague, futuristic way. In a this-year way.
 
 ${title}.
 
 ${summary}
 
-Scaling before you've solved the core problem doesn't accelerate growth.
-It accelerates the discovery of every crack in your foundation — at a much higher cost.
+The conversation is still about "AI assistants."
+The reality is already about AI colleagues.
 
-The best time to scale is when your best users are pulling you forward.
-Not when your investors are pushing you forward.
+Assistants wait to be asked.
+Agents take initiative, make decisions, and report back.
 
-There's a significant difference between those two forces.
-One is sustainable. One is expensive.
+That's not an incremental change in the tool.
+That's a fundamental change in the org structure.
 
-How do you actually know which one is driving your growth right now?`
+Is your team thinking about agents as tools — or as team members?`,
+      ];
+      return `${t[0]}${ending}`;
+    }
 
-    ] : isAI ? [
+    const t = [
 `Hot take: most AI strategies aren't AI strategies.
 They're "we added AI to our existing strategy" strategies.
 
@@ -1549,181 +1667,10 @@ Possible is a business model.
 One is incremental. The other is existential.
 
 Is your AI strategy about going 20% faster — or about doing something that genuinely wasn't possible before?`,
-
-`Unpopular opinion: the AI arms race is making most teams worse.
-Not better. Worse.
-
-${title}.
-
-${summary}
-
-When everyone is moving fast, the advantage goes to whoever is moving clearly.
-Speed without clarity is just expensive confusion at scale.
-
-Most AI initiatives right now are:
-→ Moving fast in directions nobody has fully thought through
-→ Measuring adoption, not outcomes
-→ Optimizing for demos, not for users who genuinely depend on the product
-
-The teams that will look smart in 2027 are the ones slowing down long enough to ask:
-"What are we actually trying to accomplish — and how will we know if we got there?"
-
-Is your team moving fast, or moving clearly?`
-
-    ] : [
-`The consensus on this is wrong.
-Here is the more honest version.
-
-${title}.
-
-${summary}
-
-The mainstream take focuses on the surface.
-The deeper story is about incentives — and incentives always win eventually.
-
-Most organizations are optimizing for the wrong signal here.
-They're measuring what's easy to measure, not what actually determines the outcome.
-
-The teams that see the real signal clearly right now have a window.
-It's not a large window.
-
-What would you do differently if you focused on the incentive structure instead of the narrative?`,
-
-`Hot take: the "best practices" in this space are mostly cargo cult.
-People are copying the form without understanding the function.
-
-${title}.
-
-${summary}
-
-Here's what I keep seeing:
-
-Teams adopt the process that worked at Company X.
-But Company X had different constraints, different users, different data.
-
-The process was a solution to a specific problem.
-Without that problem, it's just overhead.
-
-Copy the thinking. Not the output.
-
-What "best practice" in your current workflow exists because it worked somewhere else — and has never been validated for your specific situation?`
     ];
-    return `${templates[day % templates.length]}${ending}`;
+    return `${t[0]}${ending}`;
   }
 
-  // ── STORY ─────────────────────────────────────────────────────────────────
-  if(S.style === 'story'){
-    const templates = isProduct ? [
-`A founder shared their pivot story this week.
-One line stopped me.
-
-${title}.
-
-${summary}
-
-"We had 10,000 users and zero product-market fit.
-So we deleted every feature except what our 10 best users used daily.
-Six months later: 1,000 users, profitable, best retention we'd ever seen."
-
-Less is almost always the move.
-Almost nobody is willing to make it — until they have no other choice.
-
-What would you cut if you could only keep what your best users use every single week?`,
-
-`Someone posted a teardown this week that I keep coming back to.
-
-${title}.
-
-${summary}
-
-They tried 4 different GTM motions in 18 months. None worked.
-Then they stopped trying to reach everyone and asked one question:
-"Who is the one person whose life we completely change?"
-
-Found her. Built for her. She told 10 people.
-Those 10 told 100.
-
-The distribution strategy was never the problem.
-The specificity was.
-
-Who is your "one person"?`
-
-    ] : isAI ? [
-`A developer posted a demo this week that stopped my scroll completely.
-
-${title}.
-
-${summary}
-
-Let me put the timeline in perspective:
-
-6 months ago → specialized team, months of work, not production-ready.
-3 months ago → closed beta, waitlist only.
-This week → open sourced, anyone can run it in under 5 minutes.
-
-The thing that gets me isn't the technology itself.
-It's the compression of that timeline.
-
-Every week "impressive" becomes "baseline."
-Every week the gap between what's possible and what most teams are building widens.
-
-Are you building on today's ceiling — or last year's?`,
-
-`I saw something this week and I haven't been able to stop thinking about it.
-
-${title}.
-
-${summary}
-
-A year ago this was a research paper that maybe 200 people read.
-Six months ago it was a closed demo at a conference.
-This week someone built it as a weekend project and open sourced it.
-
-The gap between "frontier research" and "available to every developer" has never been smaller.
-And it's still shrinking.
-
-We might actually be cooked — in the best possible way.
-
-What are you building today that only became possible in the last 6 months?`
-
-    ] : [
-`Someone shared a story this week that reframed something I thought I understood.
-
-${title}.
-
-${summary}
-
-The insight wasn't in the technology or the strategy.
-It was in the question they started with.
-
-"What would have to be true for this to be the most important thing we work on?"
-
-Most teams never ask that question.
-The ones that do build entirely differently — and it shows in the outcomes.
-
-What would have to be true for your current project to be the most important thing you could work on right now?`,
-
-`A researcher posted something quietly last week.
-It deserved significantly more attention than it got.
-
-${title}.
-
-${summary}
-
-The finding isn't surprising once you see it clearly.
-But most people in this space are still operating as if the old assumption holds.
-
-That gap — between what the evidence actually shows and what the industry believes — is exactly where the next interesting companies get built.
-
-The ones paying close attention right now will look prescient in 18 months.
-The ones who aren't will be explaining why they didn't see it coming.
-
-What assumption in your space is most overdue for a serious challenge?`
-    ];
-    return `${templates[day % templates.length]}${ending}`;
-  }
-
-  // Default
   return `${title}\n\n${summary}\n\nThe ceiling keeps moving.\n\n${hashtags}`;
 }
 
