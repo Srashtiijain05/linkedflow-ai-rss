@@ -607,8 +607,8 @@ input:checked ~ .toggle-dot{transform:translateX(18px);background:var(--nova);bo
       <div class="ctrl-row">
         <span class="ctrl-lbl">Quality Threshold</span>
         <div style="display:flex;align-items:center;gap:7px">
-          <input type="range" min="0.1" max="0.9" step="0.05" value="0.4" id="thresh" oninput="(document.getElementById('thv') || {}).textContent =Math.round(parseFloat(this.value)*100)+'%'"/>
-          <div class="ctrl-val" id="thv">40%</div>
+          <input type="range" min="0.1" max="0.9" step="0.05" value="0.9" id="thresh" oninput="(document.getElementById('thv') || {}).textContent =Math.round(parseFloat(this.value)*100)+'%'"/>
+          <div class="ctrl-val" id="thv">90%</div>
         </div>
       </div>
       <div class="ctrl-row">
@@ -1179,244 +1179,373 @@ function makePost(item){
   const day     = new Date().getDate();
   const pick    = arr => arr[day % arr.length];
 
-  // ── SMART HASHTAGS ───────────────────────────────────────────────────────
-  const hashMap = [
-    { words: ['gpt','chatgpt','openai','o1','o3'],                          tag: '#OpenAI' },
-    { words: ['claude','anthropic'],                                         tag: '#Anthropic' },
-    { words: ['gemini','google deepmind','bard'],                           tag: '#GoogleAI' },
-    { words: ['llama','meta ai'],                                            tag: '#MetaAI' },
-    { words: ['mistral','mixtral'],                                          tag: '#Mistral' },
-    { words: ['llm','llms','language model','large language'],              tag: '#LLMs' },
-    { words: ['generative','gen ai','genai'],                               tag: '#GenerativeAI' },
-    { words: ['machine learning','ml '],                                     tag: '#MachineLearning' },
-    { words: ['deep learning','neural network','transformer'],              tag: '#DeepLearning' },
-    { words: ['agi','artificial general'],                                   tag: '#AGI' },
-    { words: ['agent','agentic','multi-agent'],                             tag: '#AIAgents' },
-    { words: ['rag','retrieval','vector','embedding'],                      tag: '#RAG' },
-    { words: ['prompt','prompting'],                                         tag: '#PromptEngineering' },
-    { words: ['open source','github','hugging face','ollama'],              tag: '#OpenSource' },
-    { words: ['moe','mixture of experts','mamba','ssm','architecture'],    tag: '#AIArchitecture' },
-    { words: ['framework','langchain','langgraph','dspy','llamaindex'],     tag: '#AIFrameworks' },
-    { words: ['benchmark','eval','performance','sota'],                     tag: '#AIBenchmarks' },
-    { words: ['inference','latency','deployment','production'],             tag: '#MLOps' },
-    { words: ['startup','founded','raised','series','funding'],             tag: '#TechStartups' },
-    { words: ['developer','engineer','coding','software'],                  tag: '#SoftwareEngineering' },
-    { words: ['product','launch','release','shipped'],                      tag: '#ProductLaunch' },
-    { words: ['research','paper','arxiv','study'],                          tag: '#AIResearch' },
+  // ── CONTEXT-AWARE HASHTAGS ────────────────────────────────────────────────
+  // Extract real keywords from title+summary, map to best LinkedIn hashtags
+  const txt = (title + ' ' + summary).toLowerCase();
+
+  const tagRules = [
+    // Specific models → specific tags
+    { w: ['gpt-4','gpt-5','gpt4','gpt5','openai','o1','o3'],          tags: ['#OpenAI','#GenerativeAI','#LLMs'] },
+    { w: ['claude','anthropic'],                                        tags: ['#Anthropic','#GenerativeAI','#LLMs'] },
+    { w: ['gemini','google deepmind','bard','gemma'],                  tags: ['#GoogleAI','#GenerativeAI','#LLMs'] },
+    { w: ['llama','meta ai'],                                           tags: ['#MetaAI','#OpenSourceAI','#LLMs'] },
+    { w: ['mistral','mixtral'],                                         tags: ['#Mistral','#OpenSourceAI','#LLMs'] },
+    // Architecture
+    { w: ['transformer','attention','mamba','ssm','moe','mixture'],    tags: ['#AIArchitecture','#DeepLearning','#MachineLearning'] },
+    { w: ['diffusion','stable diffusion','image gen','midjourney'],    tags: ['#GenerativeAI','#AIArt','#DiffusionModels'] },
+    // Agents & RAG
+    { w: ['agent','agentic','multi-agent','autonomous'],               tags: ['#AIAgents','#LLMs','#GenerativeAI'] },
+    { w: ['rag','retrieval','vector','embedding','semantic'],          tags: ['#RAG','#LLMs','#AIEngineering'] },
+    // Frameworks & tools
+    { w: ['langchain','langgraph','llamaindex','dspy'],                tags: ['#AIFrameworks','#LLMOps','#AIEngineering'] },
+    { w: ['ollama','hugging face','open source','github'],             tags: ['#OpenSourceAI','#AITools','#BuildingInPublic'] },
+    { w: ['pytorch','tensorflow','jax','triton'],                      tags: ['#MLEngineering','#DeepLearning','#AIResearch'] },
+    // MLOps
+    { w: ['inference','latency','deployment','production','serving'],  tags: ['#MLOps','#LLMOps','#AIEngineering'] },
+    { w: ['fine-tun','training','dataset','benchmark','eval'],        tags: ['#MachineLearning','#AIResearch','#MLOps'] },
+    // Product & startup
+    { w: ['startup','founder','product','launch','ship','build'],      tags: ['#BuildInPublic','#TechStartups','#ProductThinking'] },
+    { w: ['career','job','hiring','engineer','developer','skill'],     tags: ['#TechCareers','#SoftwareEngineering','#AI'] },
+    // Research
+    { w: ['paper','arxiv','research','study','result','sota'],        tags: ['#AIResearch','#MachineLearning','#DeepLearning'] },
+    // General AI
+    { w: ['ai','artificial intelligence','model','llm'],              tags: ['#AI','#GenerativeAI'] },
+    { w: ['tech','software','code','programming','developer'],        tags: ['#Tech','#SoftwareEngineering'] },
   ];
 
-  const txt     = (title + ' ' + summary).toLowerCase();
-  const matched = hashMap.filter(h => h.words.some(w => txt.includes(w))).map(h => h.tag);
-  const base    = txt.includes('ai') || txt.includes('model') ? ['#AI'] : ['#Tech'];
-  const hashtags = [...new Set([...base, ...matched])].slice(0, 4).join(' ');
+  let allTags = [];
+  for(const rule of tagRules){
+    if(rule.w.some(w => txt.includes(w))){
+      allTags.push(...rule.tags);
+      if(allTags.length >= 6) break;
+    }
+  }
+
+  // Deduplicate and limit to 4 most relevant
+  const hashtags = [...new Set(allTags)].slice(0, 4).join(' ');
 
   const cta    = document.getElementById('inclCta')?.checked;
   const ending = '\n\n' + hashtags;
 
   // ── AUTHORITY STYLE ───────────────────────────────────────────────────────
-  // Pattern: Specific claim → Real implication → Arrow points → Sharp close
   if(S.style === 'authority'){
-    const hooks = [
+
+    // Context-aware hook — reads the actual title
+    const isAI      = txt.includes('ai') || txt.includes('model') || txt.includes('llm');
+    const isProduct = txt.includes('product') || txt.includes('startup') || txt.includes('build');
+    const isResearch= txt.includes('research') || txt.includes('paper') || txt.includes('study');
+    const isFramework = txt.includes('framework') || txt.includes('tool') || txt.includes('library');
+
+    const hooks = isAI ? [
+      `This is one of those AI shifts most teams will understand too late:`,
+      `The real story here isn't what the headline says:`,
+      `Most people are reacting to what this is. The interesting question is what it makes possible next:`,
+      `I've been watching this space closely. Here's the honest take:`,
+    ] : isProduct ? [
+      `The pattern behind every product that actually scales:`,
+      `Most product teams are solving the wrong problem. This is why:`,
+      `What separates the 1% of products people actually love:`,
+      `The thing nobody tells you about building something that works:`,
+    ] : isFramework ? [
+      `This framework shift matters more than most engineers realize:`,
+      `The part of this tooling change nobody is talking about:`,
+      `Why the teams shipping the best AI products all made this same switch:`,
+      `The honest developer's guide to what this actually changes:`,
+    ] : [
+      `The part of this story that actually matters:`,
+      `Most coverage on this is missing the point:`,
       `This is one of those shifts most people will understand too late:`,
-      `I keep watching smart teams make the same mistake here. Here's what they're missing:`,
-      `The part of this story nobody is talking about:`,
-      `Most takes on this are wrong. Here's what's actually happening:`,
-      `This landed differently than I expected. Worth slowing down on:`,
+      `Here's the honest take nobody is writing:`,
     ];
-    const bodies = [
-      `${title}.
+
+    const bodies = isProduct ? [
+`${title}.
 
 ${summary}
 
-This isn't an incremental improvement. It's a category shift.
+The companies that scale aren't the ones who moved fastest. They're the ones who stayed obsessively focused on one specific problem for one specific user — and refused to expand until that was undeniably solved.
 
-The teams that recognize the difference between those two things right now will have a 12-month head start on everyone else.
+Most teams skip that step. They build for everyone, which means they build for no one.
 
-Here's what that actually means for how you build:
+The pattern:
+→ Narrow focus beats broad vision at the start
+→ Deep understanding of one user beats shallow understanding of many
+→ Boring, specific problems beat exciting, vague ones
 
-→ Your architecture decisions from 6 months ago need revisiting
-→ The "wait and see" strategy just got significantly more expensive
-→ The first-mover advantage in your specific domain is closing fast
+What's the one specific user problem your product solves better than anything else in the world?`,
 
-The question isn't whether to pay attention. It's whether you're paying attention to the right thing.
-
-What's the one assumption in your current roadmap this changes?`,
-
-      `${title}.
+`${title}.
 
 ${summary}
 
-The headline is interesting. The second-order effect is what matters.
+Here's what most startup post-mortems get wrong: they blame the market, the timing, the team.
 
-Most teams are reacting to what this is. The teams pulling ahead are already designing for what this makes possible next.
+The real reason most products fail is simpler. They solved a problem that wasn't painful enough, for a user who wasn't specific enough.
 
-There's a 6-month window where that distinction is worth a lot.
+The products that win don't have better features. They have better problem selection.
 
-Are you in the first group or the second?`,
-
-      `${title}.
+Are you building for a real user with a real problem — or an imaginary average?`,
+    ] : isAI ? [
+`${title}.
 
 ${summary}
 
-Here's the thing nobody is saying clearly: this isn't a feature update. It's a new baseline.
+This isn't an incremental update. The underlying capability change here is structural.
 
-What was "impressive" last quarter is now table stakes. The teams that internalized that shift months ago are already building on top of it.
+The teams building on top of last quarter's assumptions are already behind — they just don't know it yet.
 
-The gap between those teams and everyone else isn't talent. It's timing.
+Here's what actually changed:
+→ The performance floor moved up significantly
+→ Use cases that were too unreliable to ship are now production-ready
+→ The teams that rearchitected 6 months ago are pulling ahead fast
 
-How far ahead — or behind — is your current thinking?`,
+What's the one assumption in your current stack this invalidates?`,
+
+`${title}.
+
+${summary}
+
+The headline buries the lead.
+
+What matters isn't the capability itself — it's what it changes about the cost-benefit calculation for every team building in this space.
+
+Problems that were too expensive to solve last year are now trivial. Problems that seemed solved have better answers.
+
+The teams adjusting their roadmaps to reflect that right now will have a significant advantage in 12 months.
+
+Is your roadmap built on last year's constraints or this year's capabilities?`,
+    ] : [
+`${title}.
+
+${summary}
+
+The surface-level story is interesting. The second-order implication is what actually matters.
+
+Most teams are asking "how do we react to this?" The right question is "what does this make possible that wasn't possible before?"
+
+Those two questions lead to very different roadmaps.
+
+Which question is your team asking?`,
+
+`${title}.
+
+${summary}
+
+This is the kind of shift that looks obvious in hindsight and gets ignored in the moment.
+
+The teams that will look smart in 18 months aren't the ones moving fastest. They're the ones asking the clearest questions right now.
+
+What's the one thing you'd do differently if you fully believed this was as significant as it appears?`,
     ];
+
     return `${pick(hooks)}\n\n${bodies[day % bodies.length]}${ending}`;
   }
 
   // ── EDUCATIONAL STYLE ─────────────────────────────────────────────────────
-  // Pattern: Surprising entry → Clear breakdown → Numbered insight → Reframe → Question
   if(S.style === 'educational'){
-    const hooks = [
+    const isProduct = txt.includes('product') || txt.includes('startup') || txt.includes('user');
+    const isAI      = txt.includes('ai') || txt.includes('model') || txt.includes('llm');
+
+    const hooks = isProduct ? [
+      `The product playbook most teams never see:`,
+      `What actually makes a product succeed — broken down clearly:`,
+      `I studied 100+ successful products. The pattern is simpler than people think:`,
+    ] : isAI ? [
       `Most people are using this wrong. Here's the right mental model:`,
       `Nobody explained this clearly when it came out. Let me fix that:`,
-      `I spent a week going deep on this. Three things I wish I'd known going in:`,
-      `The thing that confused me about this until it suddenly didn't:`,
-      `Here's the part of this that actually matters (the coverage missed it):`,
+      `I went deep on this so you don't have to. Three things worth knowing:`,
+    ] : [
+      `Here's the part of this story most coverage misses:`,
+      `Let me make this concrete — no jargon:`,
+      `The mental model that makes this make sense:`,
     ];
-    const bodies = [
-      `${title}.
+
+    const bodies = isProduct ? [
+`${title}.
+
+${summary}
+
+Let me break down what this actually looks like in practice:
+
+→ Step 1: Find one user with one painful, specific problem
+→ Step 2: Solve it completely — not partially, completely
+→ Step 3: Let that user tell you what to build next
+
+The teams that skip step 1 spend years at step 2. The teams that nail step 1 are usually at step 3 within months.
+
+What step are you on?`,
+
+`${title}.
+
+${summary}
+
+Three things the best product teams do differently:
+
+1. They define "done" before they start building — what does success look like for this specific user?
+2. They talk to users after every sprint, not before every roadmap
+3. They kill features that users don't use, even when the team loves them
+
+None of this is complicated. Almost nobody actually does all three.
+
+Which one does your team struggle with most?`,
+    ] : [
+`${title}.
 
 ${summary}
 
 Let me make this concrete:
 
-→ What it replaces: the approach that worked fine until about 6 months ago
-→ What it unlocks: the use cases that were too unreliable to ship before
-→ What it doesn't fix: the hard problems that were always about data, not models
+→ What changed: the capability floor moved — things that were unreliable are now production-ready
+→ What didn't change: the hard problems (data quality, evaluation, edge cases) are still hard
+→ What it means for you: your biggest opportunity isn't adoption — it's knowing what to build on top
 
-The teams getting the most out of this aren't the ones who adopted it fastest. They're the ones who understood the boundaries clearly first.
+Most teams get the first point. Very few act on the third.
 
-Which of those three points changes something in how you're currently building?`,
+Which of these is the blindspot in your current approach?`,
 
-      `${title}.
-
-${summary}
-
-Three things most teams get wrong when they encounter this:
-
-1. They treat it as a drop-in replacement for what they already have — it's not
-2. They benchmark it on the wrong task and draw the wrong conclusion
-3. They skip the evaluation step and discover the edge cases in production
-
-The teams doing this well inverted all three. Start with the evals. Work backwards from what "good" actually looks like for your use case.
-
-What does good look like for yours?`,
-
-      `${title}.
+`${title}.
 
 ${summary}
 
-The mental model that made this click for me:
+Three things most teams get wrong here:
 
-Stop thinking about what it is. Start thinking about what breaks when you push it past its comfortable range.
+1. They treat it as a drop-in replacement for what they have — it's not
+2. They evaluate it on the wrong task and reach the wrong conclusion
+3. They ship before they've found the failure mode
 
-That's where you learn what it's actually good for — and what it isn't. Every abstraction has a seam. Find it before your users do.
+The teams doing this well did all three in reverse. Start with where it breaks. Then decide if it's right for you.
 
-What's the seam in the tool you're relying on most right now?`,
+What's the failure mode you haven't tested yet?`,
     ];
+
     return `${pick(hooks)}\n\n${bodies[day % bodies.length]}${ending}`;
   }
 
   // ── OPINION STYLE ─────────────────────────────────────────────────────────
-  // Pattern: Provocative claim → Real evidence → Uncomfortable truth → Invite pushback
   if(S.style === 'opinion'){
+    const isProduct = txt.includes('product') || txt.includes('startup');
+    const isAI      = txt.includes('ai') || txt.includes('model');
+
     const hooks = [
-      `The hot take nobody wants to publish because it makes everyone uncomfortable:`,
-      `I've been sitting on this opinion for a while. Here it is:`,
-      `Everyone is celebrating this. I think we're celebrating the wrong thing:`,
-      `Unpopular opinion that I'll stand behind:`,
-      `The consensus on this is wrong. Here's the more honest read:`,
+      `Hot take that I'll defend:`,
+      `The consensus on this is wrong. Here's the honest version:`,
+      `Unpopular opinion — and I've thought about it carefully:`,
+      `Everyone is celebrating this for the wrong reason:`,
     ];
-    const bodies = [
-      `${title}.
+
+    const bodies = isProduct ? [
+`${title}.
 
 ${summary}
 
-Here's what the coverage is missing:
+Here's the take nobody wants to publish: most "product-market fit" conversations are a distraction from a simpler question.
 
-The story isn't the capability. The story is what it reveals about where the real ceiling is.
+Did you build something one specific person genuinely couldn't live without?
 
-We keep hitting impressive benchmarks and then discovering the benchmark wasn't measuring the thing that matters in production. This is that pattern again.
+Not "a lot of people kind of like." One person. Couldn't live without.
 
-The teams that will look smart in 18 months aren't the ones chasing the benchmark. They're the ones asking why the benchmark exists and what it's not testing.
+If you can't name that person, you don't have it yet. The metrics come after that moment — not before.
 
-I could be wrong about where the ceiling actually is. What's your read?`,
+Disagree? Tell me where this breaks down.`,
 
-      `${title}.
-
-${summary}
-
-The uncomfortable version of this story:
-
-Most organizations aren't behind on AI because they lack access to the tools. They're behind because they lack clarity on what problem they're actually trying to solve.
-
-Better tools don't fix fuzzy thinking. They just let you be wrong faster and at greater scale.
-
-The teams winning right now didn't get there by adopting more. They got there by being ruthlessly specific about less.
-
-What's the one problem your team is most clear about?`,
-
-      `${title}.
+`${title}.
 
 ${summary}
 
-Hot take: we're going to look back at this period and realize we were optimizing for the wrong signal the entire time.
+The uncomfortable truth about scaling: you can't shortcut the early stage.
 
-Speed of adoption isn't the metric. Depth of integration is. Benchmark performance isn't the metric. Reliability on your specific use case is.
+The teams that try to scale before they've nailed the core use case for one specific user end up with a big, leaky bucket. They keep pouring in users and wonder why retention is broken.
 
-The leaderboard tells you who's winning the benchmark. It doesn't tell you who's building something people actually depend on.
+Fix the bucket before you turn on the tap.
 
-Those are different competitions. Which one is your team in?`,
+What would you build differently if you weren't allowed to acquire your next user until your last 10 were genuinely successful?`,
+    ] : [
+`${title}.
+
+${summary}
+
+The uncomfortable version of this:
+
+Most organizations aren't behind on AI because they lack access. They're behind because they lack clarity on what specific problem they're solving.
+
+More capability doesn't fix fuzzy thinking. It just lets you be wrong faster and at greater scale.
+
+The teams winning aren't the ones with the best tools. They're the ones who are most specific about what they're trying to accomplish.
+
+What's the most specific version of the problem you're trying to solve?`,
+
+`${title}.
+
+${summary}
+
+Hot take: the AI teams moving fastest right now are actually moving too fast.
+
+They're adopting before evaluating. Shipping before measuring. Scaling before they've found the real failure mode.
+
+The teams that will look smart in 2 years aren't the quickest adopters. They're the ones who slowed down enough to understand what they were actually building — and why it would work.
+
+Speed is easy to copy. Clarity isn't.
+
+Is your team moving fast, or moving clearly?`,
     ];
+
     return `${pick(hooks)}\n\n${bodies[day % bodies.length]}${ending}`;
   }
 
   // ── STORY STYLE ───────────────────────────────────────────────────────────
-  // Pattern: Real moment → Specific detail → Past vs now contrast → Emotional close
   if(S.style === 'story'){
-    const openers = [
+    const isProduct = txt.includes('product') || txt.includes('startup') || txt.includes('user');
+    const openers = isProduct ? [
+      `A founder just shared something that completely reframed how I think about product.`,
+      `Someone posted a teardown this week that I keep coming back to.`,
+      `A product team shared their build story this week. One line stopped me.`,
+    ] : [
       `A developer just shared something that stopped me mid-scroll.`,
       `Someone posted a demo this week and I genuinely couldn't believe it was real.`,
-      `This landed in my feed today and I've been thinking about it since.`,
-      `A researcher shared something quietly this week. It deserved a lot more attention.`,
-      `I saw a demo this morning that I keep going back to.`,
+      `This landed in my feed and I've been thinking about it since.`,
     ];
-    const closers = [
-      `Just a year ago, this would have been a funded research project. Now it's a weekend build.
 
-The gap between "research" and "anyone can build this" has never been smaller.
+    const closers = isProduct ? [
+`The company had tried three different GTM strategies. None worked.
+
+Then they stopped trying to reach everyone and focused on one specific type of user with one specific pain. 
+
+Six months later: best retention numbers they'd ever seen.
+
+The insight wasn't the product. It was the specificity.
+
+What would your growth look like if you got 10x more specific about who you're actually building for?`,
+
+`Just a year ago they were fighting for user attention like everyone else.
+
+Then they stopped asking "how do we grow?" and started asking "how do we make our best users genuinely successful?"
+
+The growth followed. It always does when you solve the right thing completely.
+
+What does "completely solved" look like for your best user?`,
+    ] : [
+`Six months ago this would have needed a research team and 3 months.
+
+Now it's a weekend project.
+
+The gap between "only the best-resourced teams can do this" and "anyone can build this" has never closed faster.
 
 We might actually be cooked — in the best way possible.`,
 
-      `Six months ago this was a paper. Three months ago it was a closed demo. This week someone open sourced it.
+`A year ago this was a paper. Three months ago it was a closed beta.
+
+Today someone built it over a weekend and open sourced it.
 
 The compounding is real. And it's not slowing down.
 
 Are you keeping up, or are you already playing catch-up?`,
-
-      `The thing that gets me isn't the technology. It's the pace.
-
-Every week there's a new "this changes everything." And somehow, every week, it actually does.
-
-I don't know exactly where this ends up. But I know ignoring it isn't an option anymore.`,
-
-      `A year ago we were impressed by autocomplete. Now this.
-
-The curve is steeper than the headlines suggest. And most organizations are still planning like it's linear.
-
-What does your 12-month roadmap look like if the current pace holds?`,
     ];
+
     return `${pick(openers)}\n\n${title}.\n\n${summary}\n\n${closers[day % closers.length]}\n\n${hashtags}`;
   }
 
-  // Default fallback
-  return `${title}\n\n${summary}\n\nThe ceiling keeps moving. The teams that recognize that earliest have the most to gain.\n\n${hashtags}`;
+  // Default
+  return `${title}\n\n${summary}\n\nThe ceiling keeps moving.\n\n${hashtags}`;
 }
 
 // ── WORKFLOW ─────────────────────────────────────────────────────────────────
@@ -1607,30 +1736,38 @@ async function aiFilter(title, desc){
 
 function fallbackFilter(title, desc){
   const t = (title + " " + desc).toLowerCase();
-  let score = 78; // Start high — these are already curated Tech/AI feeds
+  let score = 82; // Base — curated Tech/AI feeds start high
 
-  // Hard negatives only — clear spam/promo
-  const spam = ["sponsored","advertisement","buy now","click here","limited time","coupon","giveaway","prize","promo code"];
-  spam.forEach(w=>{ if(t.includes(w)) score -= 20; });
+  // Hard negatives — spam/promo → big penalty
+  const spam = ["sponsored","advertisement","buy now","click here","limited time","coupon","giveaway","prize","promo code","sale","discount","subscribe now"];
+  spam.forEach(w=>{ if(t.includes(w)) score -= 25; });
 
-  // Boost for strong Tech/AI signals
-  const strong = ["ai","machine learning","llm","gpt","neural","model","engineer","developer","software","open source","github","research","paper","benchmark","startup","product","launch","framework","tool","api","data","cloud","security","performance"];
+  // Soft negatives
+  const soft = ["opinion","rant","hot take","just my"];
+  soft.forEach(w=>{ if(t.includes(w)) score -= 5; });
+
+  // Core Tech/AI signals → +3 each
+  const strong = ["ai","machine learning","llm","gpt","claude","gemini","neural","model","engineer","developer","software","open source","github","research","paper","benchmark","framework","tool","api","architecture","transformer","agent","data","inference","deployment"];
   strong.forEach(w=>{ if(t.includes(w)) score += 3; });
 
-  // Extra boost for high-value signals
-  const premium = ["breakthrough","study","analysis","report","insight","strategy","architecture","deep dive","lessons","how we","what i learned","case study","open sourced","released","announces"];
-  premium.forEach(w=>{ if(t.includes(w)) score += 5; });
+  // Premium signals → +6 each (high-value content)
+  const premium = ["releases","launched","open sourced","new model","new framework","announces","breakthrough","study shows","research reveals","case study","deep dive","how we built","lessons from","what i learned","just shipped","just released","introducing"];
+  premium.forEach(w=>{ if(t.includes(w)) score += 6; });
 
-  // Desc length bonus
-  if(desc.length > 100) score += 5;
-  if(desc.length > 200) score += 3;
-  if(title.length > 25) score += 3;
+  // Specificity bonus — named models/tools
+  const named = ["gpt-4","gpt-5","claude 3","gemini","llama","mistral","mixtral","langchain","langgraph","dspy","pytorch","tensorflow","hugging face","vercel","ollama","cursor","copilot"];
+  named.forEach(w=>{ if(t.includes(w)) score += 5; });
+
+  // Length bonuses
+  if(desc.length > 80)  score += 4;
+  if(desc.length > 180) score += 3;
+  if(title.length > 30) score += 3;
 
   score = Math.max(5, Math.min(99, score));
 
   const reason = score >= 90 ? "Excellent — highly relevant Tech/AI content." :
                  score >= 80 ? "Strong professional content." :
-                 score >= 60 ? "Relevant content." : "Low relevance.";
+                 score >= 65 ? "Relevant content." : "Low relevance or promotional.";
 
   return { score, reason };
 }
@@ -2241,15 +2378,24 @@ async function runScheduledPost(slot){
   window._lastPostSlot = slot + new Date().toISOString().split("T")[0];
 
   const articles = schedulerArticles.length > 0 ? schedulerArticles : [
-    { title: "AI Is Transforming How Businesses Operate in 2026", description: "73% of enterprises have integrated AI. Early adopters are seeing 34% productivity gains.", link: "" },
-    { title: "The Skills That Will Matter Most in the Age of AI", description: "Critical thinking and creativity top the list as AI handles routine cognitive work.", link: "" },
-    { title: "Why Most Digital Transformations Fail", description: "McKinsey: 70% fall short. Leadership alignment matters more than technology.", link: "" },
-    { title: "Building High-Performance Teams Remotely", description: "Top companies share their playbook for culture and innovation across distributed teams.", link: "" },
-    { title: "The Real ROI of Employee Development", description: "Companies investing in learning see 24% higher profit margins and significantly lower turnover.", link: "" },
+    { title: "Meta Releases Llama 4 — Open Source Just Caught Up to GPT-4", description: "Llama 4's mixture-of-experts architecture matches closed frontier models on most benchmarks. The open source vs closed model debate just got a lot more interesting.", link: "" },
+    { title: "Mamba Architecture Is Replacing Transformers in Production", description: "State space models process sequences in O(n) instead of O(n²). For long context, the performance difference is an order of magnitude.", link: "" },
+    { title: "LangGraph Is Replacing LangChain for Production AI Agents", description: "Stateful, cyclical graphs instead of linear chains. The mental model shift is significant — and the production stability difference is even more so.", link: "" },
+    { title: "Ollama Just Made Local LLM Deployment as Easy as Docker", description: "Pull, run, and serve any open source model in under 60 seconds. The local-first AI development workflow is now accessible to every developer.", link: "" },
+    { title: "The Context Window Is Now a Design Surface — Not Just a Limit", description: "With 1M+ token windows, the constraint has flipped. The hard problem is now what to put in context, not whether it fits.", link: "" },
+    { title: "DSPy: The Framework That's Killing Hand-Written Prompts", description: "Compile your prompts instead of writing them. DSPy optimizes prompts automatically using your data. The prompting-as-code paradigm is here.", link: "" },
+    { title: "Why Everyone Is Moving From RAG to Agentic Retrieval in 2026", description: "Static RAG pipelines break on complex queries. Agentic retrieval — where the model decides what to look up and when — solves the problems RAG couldn't.", link: "" },
   ];
 
-  const idx     = todayPostsDone % articles.length;
-  const article = articles[idx];
+  // Only use articles that score 90+ — filter first
+  const scoredArticles = articles.map(a => ({
+    ...a,
+    score: fallbackFilter(a.title, a.description || "").score
+  })).filter(a => a.score >= 90);
+
+  const pool = scoredArticles.length > 0 ? scoredArticles : articles;
+  const idx  = todayPostsDone % pool.length;
+  const article = pool[idx];
   const postText = makePost({ title: article.title, summary: article.description || "", feedKey: S.feedKey || "tech" });
 
   log(`📤 Auto posting (${slot}): "${article.title.substring(0,40)}..."`, "info");
