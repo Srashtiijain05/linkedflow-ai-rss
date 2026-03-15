@@ -1209,188 +1209,200 @@ function makePost(item){
   // ─────────────────────────────────────────────────────────────────────────
   if(S.style === 'story'){
 
-    // Named people bank — rotates daily
-    const names = [
-      { name: 'A developer named Rohan', role: 'posted a demo' },
-      { name: 'An engineer named Sarah', role: 'just shared something' },
-      { name: 'A researcher named Priya', role: 'shared a thread' },
-      { name: 'A builder named Arjun', role: 'posted a teardown' },
-      { name: 'A founder named Neha', role: 'shared a breakdown' },
-      { name: 'A developer named Liam', role: 'just open sourced something' },
-    ];
-    const person = names[day % names.length];
+    // Real names + specific details — makes it feel witnessed, not written
+    const devNames  = ['Marcus','Priya','Alex','Jordan','Sana','Ryo','Leila','Dev'];
+    const name      = devNames[day % devNames.length];
 
-    const reactions = [
-      `The speed of progress here is honestly insane.\n\nWe might actually be cooked.`,
-      `Just a year ago this would have been a funded PhD project.\nNow it's a weekend build.\n\nThe gap between "research" and "anyone can build this" has never been smaller.`,
-      `Six months ago most people were still figuring out basic prompting.\nNow we're watching this happen in real time.\n\nThe compounding is real. And it's not slowing down.`,
-      `A year ago this required a specialized team and months of runway.\nThis week someone built it alone and open sourced it.\n\nWe might actually be cooked — in the best possible way.`,
-      `The thing that gets me isn't the technology.\nIt's the timeline.\n\nEvery week the ceiling moves. Every week "impressive" becomes "baseline."`,
-    ];
-
-    if(isAgent){
-      const agentTemplates = [
-`${person.name} ${person.role} this week that stopped my scroll.
-
-${title}.
-
-AI agents that ${summary.toLowerCase().replace(/\.$/, '')} — without any human in the loop.
-
-Just a year ago most people were still using AI like a fancy search engine.
-Now we're watching agents organize themselves, coordinate work, and collaborate like real teams.
-
-${reactions[day % reactions.length]}
-
-What's the most surprising thing you've seen AI agents do this week?`,
-
-`${person.name} built something this week that I keep going back to.
+    const aiTemplates = [
+`A developer named ${name} just shared something that stopped my scroll.
 
 ${title}.
 
 ${summary}
 
-The demo lasted 3 minutes.
-By the end of it I had to close my laptop and take a walk.
+Just a year ago most people were still using AI like a better Google.
+Now we're watching ${name} and builders like them ship things that would have required a full team 18 months ago.
 
-This is not the AI we were promised in science fiction.
-This is something stranger and faster and more immediate.
+The speed of what's being built right now is honestly hard to process.
 
-Just a year ago we were impressed by autocomplete.
-Now we're watching agents run their own meetings.
+We might actually be cooked — in the best possible way.`,
 
-The speed of this is honestly insane.
-
-Are you building with agents yet — or still watching from the sidelines?`,
-      ];
-      return `${agentTemplates[day % agentTemplates.length]}${ending}`;
-    }
-
-    if(isAIModel || isFramework || isAIArch){
-      const aiTemplates = [
-`${person.name} ${person.role} this week and I haven't been able to stop thinking about it.
+`${name} posted a demo this week and I haven't been able to stop thinking about it.
 
 ${title}.
 
 ${summary}
 
-Let me put the timeline in perspective:
+Six months ago this was a research paper.
+Three months ago it was a closed beta that 200 people had access to.
+This week ${name} built it over a weekend and open sourced it.
 
-6 months ago → closed research project, not accessible.
-3 months ago → limited beta, waitlist only.
-This week → open sourced. Anyone can run it in under 5 minutes.
+The gap between "frontier AI research" and "anyone can build this on a Saturday" has never been smaller.
 
-The gap between "frontier research" and "anyone can build with this" has never closed faster.
+And it's still shrinking.`,
 
-${reactions[day % reactions.length]}
+`I saw ${name}'s post this week and I'm still processing it.
+
+${title}.
+
+${summary}
+
+A year ago we were impressed when AI could write a decent email.
+Now we're watching individual developers ship things that used to require entire teams, months, and millions in infrastructure.
+
+The compounding is real. And it's not slowing down.
 
 What are you building today that only became possible in the last 6 months?`,
 
-`${person.name} dropped something this week that I almost scrolled past.
-I'm glad I didn't.
+`${name} just quietly dropped something that the whole industry should be paying attention to.
 
 ${title}.
 
 ${summary}
 
-Six months ago this would have needed a team of specialists and months of compute budget.
-This week: weekend project, open sourced, 200 GitHub stars in 24 hours.
+The thing that gets me isn't the technology itself.
+It's the timeline.
 
-The thing that gets me isn't the capability.
-It's the pace.
+18 months ago: research lab with 50 people.
+6 months ago: YC startup with $5M.
+This week: ${name}, solo, weekend project, open sourced.
 
-Just a year ago we were treating these tools as experiments.
-Now they're production infrastructure.
+That compression is the actual story.
 
-${reactions[(day+1) % reactions.length]}
+We might actually be cooked.`,
 
-Are you building on today's capabilities — or still planning around last year's constraints?`,
-      ];
-      return `${aiTemplates[day % aiTemplates.length]}${ending}`;
-    }
-
-    if(isProduct){
-      const productTemplates = [
-`${person.name} shared their build story this week.
-One line stopped me completely.
+`A researcher named ${name} shared something this week that most people scrolled past.
+I couldn't.
 
 ${title}.
 
 ${summary}
 
-"We stopped trying to build for everyone.
-We picked one person with one problem and solved it completely.
-Everything changed after that."
+Just a year ago most people were still treating AI like a fancy autocomplete.
+Now ${name} and builders like them are shipping things that make you genuinely question what the next 12 months look like.
 
-The simplest insight in product. Also the hardest to actually do.
+The speed isn't slowing. It's compounding.
 
-Most teams know this. Almost none of them act on it until they're forced to.
+Are you keeping up — or are you already playing catch-up?`,
+    ];
 
-Who is the one specific person your product exists for right now?`,
+    const productTemplates = [
+`A founder named ${name} shared their pivot story this week.
+One line stopped me.
 
-`${person.name} ${person.role} about their pivot this week.
+${title}.
+
+${summary}
+
+"We had 10,000 users and zero product-market fit.
+So we deleted everything except what our 10 best users used every single week.
+Six months later: 1,000 users, profitable, and the best retention we'd ever seen."
+
+Less is almost always the move.
+Almost nobody is willing to make it until they have no other choice.
+
+What would you cut if you could only keep what your best users actually use every week?`,
+
+`${name} posted a teardown this week that I keep coming back to.
+
+${title}.
+
+${summary}
+
+They tried 4 different GTM strategies in 18 months. None worked.
+Then they stopped trying to reach everyone and asked one question:
+"Who is the one person whose life we completely change?"
+
+Found her. Built for her specifically. She told 10 people.
+Those 10 told 100.
+
+The distribution strategy was never the problem.
+The specificity was.
+
+Who is your "one person"?`,
+    ];
+
+    const leadershipTemplates = [
+`A manager named ${name} shared something in a thread this week.
 I've been thinking about it since.
 
 ${title}.
 
 ${summary}
 
-They had all the metrics. Users. Revenue. Growth.
-But their best customers were accidentally finding value they never designed for.
+They changed one thing about their weekly team meeting:
+They started it by asking "What's something you're uncertain about that you haven't said out loud yet?"
 
-So they stopped. Talked to those customers. Rebuilt around what those customers actually needed.
-
-Six months later: half the features, double the retention.
-
-Less is almost always the move.
-Almost nobody makes it voluntarily.
-
-What would you cut if you could only keep what your best users use every week?`,
-      ];
-      return `${productTemplates[day % productTemplates.length]}${ending}`;
-    }
-
-    if(isLeadership && !isGenAI){
-      const leaderTemplates = [
-`${person.name} shared something in a thread this week that I keep coming back to.
-
-${title}.
-
-${summary}
-
-They changed one thing about how they ran their team meetings.
-Instead of starting with status updates, they started with one question:
-
-"What's something you've been uncertain about that you haven't said out loud yet?"
-
-Within a month: three major blockers surfaced that had been silently slowing the team down for quarters.
+Within a month, three process problems surfaced that had been silently slowing the team down for quarters.
 
 The information was always there.
 Nobody felt safe enough to say it.
 
 What question could you ask your team this week that would surface what's not being said?`,
-      ];
-      return `${leaderTemplates[day % leaderTemplates.length]}${ending}`;
-    }
 
-    // Generic story
-    const genericTemplates = [
-`${person.name} ${person.role} this week that reframed something I thought I understood.
+`${name} posted something about team performance this week that reframed how I think about it.
 
 ${title}.
 
 ${summary}
 
-The insight wasn't in the headline.
-It was in the question they started with before building anything:
+Their team had strong individuals and weak collective output.
+Every 1:1 was positive. Every team meeting was surface-level.
 
-"What would have to be true for this to be the most important thing we work on?"
+The fix wasn't a new process or a new framework.
+${name} just started publicly sharing their own uncertainties first — before asking anyone else to.
 
-Most teams never ask that question.
-The ones that do build very differently.
+Within 60 days the team dynamic shifted completely.
 
-What would have to be true for your current project to be the most important thing you could work on?`,
+Safety isn't built with policies. It's built with modeling.
+
+What uncertainty could you share with your team this week?`,
     ];
-    return `${genericTemplates[0]}${ending}`;
+
+    const careerTemplates = [
+`A senior engineer named ${name} shared their career inflection point this week.
+It wasn't what I expected.
+
+${title}.
+
+${summary}
+
+${name} had been a strong IC for 5 years. Great at execution. Nearly invisible in decisions.
+
+The shift: they started writing down the reasoning behind every major technical call — not just the decision, the why.
+
+Within 6 months: two promotions.
+
+The work hadn't changed.
+The legibility of their thinking had.
+
+When was the last time you documented not just what you built — but why?`,
+
+`${name} shared their job search story this week and I think about it differently now.
+
+${title}.
+
+${summary}
+
+40 applications. 3 interviews.
+
+Then they changed one thing: they led every conversation with a specific decision, the tradeoff they'd considered, and what they'd do differently.
+
+Next 10 applications: 7 interviews.
+
+Hiring managers don't remember what you built.
+They remember how you think.
+
+What's the most interesting technical decision you've made recently — and can you explain the reasoning clearly?`,
+    ];
+
+    const templates = isGenAI ? aiTemplates
+      : isProduct ? productTemplates
+      : (isLeadership && !isGenAI) ? leadershipTemplates
+      : isCareer ? careerTemplates
+      : aiTemplates;
+
+    return `${templates[day % templates.length]}\n\n${hashtags}`;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
