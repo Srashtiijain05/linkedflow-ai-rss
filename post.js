@@ -41,7 +41,7 @@ const ARTICLES = [
 
 
 // ── STYLES ────────────────────────────────────────────────────────────────────
-const STYLES = ['authority', 'educational', 'opinion'];
+const STYLES = ['authority', 'educational', 'opinion', 'story'];
 const dayOfWeek = new Date().getDay();
 const hourOfDay = new Date().getHours();
 const style     = STYLES[dayOfWeek % STYLES.length];
@@ -80,149 +80,167 @@ function getHashtags(title, desc) {
 // ── GENERATE POST ─────────────────────────────────────────────────────────────
 function generatePost(article, style) {
   const { title, desc } = article;
-  const day = new Date().getDate();
+  const day  = new Date().getDate();
+  const pick = arr => arr[day % arr.length];
+  const tags = getHashtags(title, desc);
 
   const authorityHooks = [
-    "I've been tracking this space closely. Here's what most teams still get wrong:",
-    "The conversation about this is missing its most important point:",
-    "Everyone's talking about this. Almost nobody understands what it actually means:",
-    "Hot take that nobody in tech wants to say out loud:",
+    "This is one of those shifts most people will understand too late:",
+    "The part of this story nobody is talking about:",
+    "Most takes on this are wrong. Here's what's actually happening:",
+    "I keep watching smart teams make the same mistake here:",
+    "This landed differently than I expected. Worth slowing down on:",
   ];
-  const educationalHooks = [
-    "Explained in plain English — no jargon, just what matters:",
-    "3 things I wish I knew before starting with this:",
-    "The simplest mental model for this that actually works:",
-    "Most engineers overcomplicate this. Here's the 80/20 version:",
+  const eduHooks = [
+    "Most people are using this wrong. Here's the right mental model:",
+    "Nobody explained this clearly when it came out. Let me fix that:",
+    "I spent a week going deep on this. Three things I wish I'd known:",
+    "Here's the part that actually matters (the coverage missed it):",
   ];
   const opinionHooks = [
-    "Unpopular opinion: the way most teams approach this is setting them up to fail.",
-    "The hype is real. But we're optimizing for the wrong thing.",
-    "I'm going to say something that might get me ratio'd:",
-    "We're applying last decade's mental models to a fundamentally different problem.",
+    "The hot take nobody wants to publish because it makes everyone uncomfortable:",
+    "Everyone is celebrating this. I think we're celebrating the wrong thing:",
+    "Unpopular opinion that I'll stand behind:",
+    "The consensus on this is wrong. Here's the more honest read:",
+  ];
+  const storyOpeners = [
+    "A developer just shared something that stopped me mid-scroll.",
+    "Someone posted a demo this week and I genuinely couldn't believe it was real.",
+    "This landed in my feed today and I've been thinking about it since.",
+    "A researcher shared something quietly this week. It deserved way more attention.",
   ];
 
-  const authorityBodies = [
-    `${desc}
+  if (style === 'authority') {
+    const bodies = [
+`${title}.
 
-I've seen this pattern across dozens of teams.
+${desc}
 
-The ones who fall behind aren't making bad technical decisions. They're making good technical decisions without asking the right strategic questions first.
+This isn't an incremental improvement. It's a category shift.
 
-Here's what separates the teams winning right now:
+The teams that recognize the difference between those two things right now will have a 12-month head start on everyone else.
 
-→ They defined the problem before buying the solution
-→ They built for the second-order effect, not just the immediate use case
-→ They asked "what breaks at scale?" before it broke
+→ Your architecture decisions from 6 months ago need revisiting
+→ The "wait and see" strategy just got significantly more expensive
+→ The first-mover advantage in your domain is closing fast
 
-The companies that look smart in 3 years are making those calls today.
+What's the one assumption in your current roadmap this changes?`,
 
-What question is your team not asking yet?`,
+`${title}.
 
-    `${desc}
+${desc}
 
-Most teams are optimizing for the wrong metric.
+The headline is interesting. The second-order effect is what matters.
 
-They're measuring speed of adoption. The teams pulling ahead are measuring depth of integration.
+Most teams are reacting to what this is. The teams pulling ahead are already designing for what this makes possible next.
 
-Speed gets you a demo. Depth gets you a competitive moat.
+There's a 6-month window where that distinction is worth a lot.
 
-Are you building for the demo or the moat?`,
+Are you in the first group or the second?`,
 
-    `${desc}
+`${title}.
 
-I audited how top teams approach this. The pattern that separates the best from the rest isn't talent or budget.
+${desc}
 
-It's that the best teams treated this as a planning problem, not a technology problem.
+Here's what nobody is saying clearly: this isn't a feature update. It's a new baseline.
 
-The executives who'll look smart in 3 years are asking one question today:
+What was "impressive" last quarter is now table stakes. The teams that internalized that months ago are already building on top of it.
 
-"Are we solving the right problem?"`,
-  ];
+The gap between those teams and everyone else isn't talent. It's timing.
 
-  const educationalBodies = [
-    `${desc}
+How far ahead — or behind — is your current thinking?`,
+    ];
+    return `${pick(authorityHooks)}\n\n${bodies[day % bodies.length]}\n\n${tags}`;
+  }
 
-Here's what this actually means for your team — broken down simply:
+  if (style === 'educational') {
+    const bodies = [
+`${title}.
 
-→ The immediate impact: your workflows change before your strategy does
-→ The hidden cost: teams that skip the fundamentals spend 3x longer fixing it later
-→ The real opportunity: engineers who understand the 'why' ship better products than those who only know the 'how'
+${desc}
 
-Most people skip step one and wonder why step three doesn't work.
+Let me make this concrete:
 
-Which step are you on?`,
+→ What it replaces: the approach that worked fine until about 6 months ago
+→ What it unlocks: use cases that were too unreliable to ship before
+→ What it doesn't fix: the hard problems that were always about data, not models
 
-    `${desc}
+The teams getting the most out of this aren't the ones who adopted fastest. They're the ones who understood the boundaries clearly first.
+
+Which of those three points changes something in how you're building?`,
+
+`${title}.
+
+${desc}
 
 Three things most teams get wrong here:
 
-1. They adopt the tool before defining the problem it solves
-2. They measure success by usage, not by outcome
-3. They optimize for the first month, not the first year
+1. Treat it as a drop-in replacement — it's not
+2. Benchmark it on the wrong task and draw the wrong conclusion
+3. Skip evaluation and discover edge cases in production
 
-The teams consistently shipping great work do the opposite on all three.
+The teams doing this well inverted all three. Start with evals. Work backwards from what "good" actually looks like.
 
-Which of these is your team most guilty of?`,
+What does good look like for your use case?`,
+    ];
+    return `${pick(eduHooks)}\n\n${bodies[day % bodies.length]}\n\n${tags}`;
+  }
 
-    `${desc}
+  if (style === 'opinion') {
+    const bodies = [
+`${title}.
 
-The mental model that changed how I think about this:
+${desc}
 
-Stop asking "how do we use this?" and start asking "what problem disappears if we get this right?"
+The uncomfortable version of this story:
 
-That single reframe changes your roadmap, your hiring, and your success metrics all at once.
+Most teams aren't behind on this because they lack access. They're behind because they lack clarity on what problem they're actually solving.
 
-The best teams work backwards from the answer. Most teams work forwards from the tool.
+Better tools don't fix fuzzy thinking. They just let you be wrong faster and at greater scale.
 
-Which direction is your team moving?`,
-  ];
+The teams winning right now didn't get there by adopting more. They got there by being ruthlessly specific about less.
 
-  const opinionBodies = [
-    `${desc}
+What's the one problem your team is clearest about?`,
 
-Here's the part nobody wants to say out loud:
+`${title}.
 
-Most teams aren't behind because of bad technology decisions. They're behind because of bad prioritization decisions dressed up as technology decisions.
+${desc}
 
-The AI isn't the problem. The roadmap is.
+Hot take: we're optimizing for the wrong signal.
 
-The companies that figure that out first won't just catch up — they'll define what the next 3 years look like for everyone else.
+Speed of adoption isn't the metric. Depth of integration is. Benchmark performance isn't the metric. Reliability on your specific use case is.
 
-Am I wrong? Tell me why.`,
+The leaderboard tells you who's winning the benchmark. It doesn't tell you who's building something people actually depend on.
 
-    `${desc}
+Those are different competitions. Which one is your team in?`,
+    ];
+    return `${pick(opinionHooks)}\n\n${bodies[day % bodies.length]}\n\n${tags}`;
+  }
 
-The mainstream take is focused on the wrong variable.
+  if (style === 'story') {
+    const closers = [
+`Just a year ago, this would have been a funded research project. Now it's a weekend build.
 
-Everyone is optimizing for speed. The teams actually pulling ahead are optimizing for clarity.
+The gap between "research" and "anyone can build this" has never been smaller.
 
-Speed without clarity just means you reach the wrong destination faster.
+We might actually be cooked — in the best way possible.`,
 
-The uncomfortable truth: most AI initiatives move fast in the wrong direction and call it progress.
+`Six months ago this was a paper. Three months ago it was a closed demo. This week someone open sourced it.
 
-What's the one thing your team would do differently with perfect clarity?`,
+The compounding is real. And it's not slowing down.
 
-    `${desc}
+Are you keeping up, or are you already playing catch-up?`,
 
-Unpopular opinion: the reason most teams struggle with this isn't a skills gap.
+`The thing that gets me isn't the technology. It's the pace.
 
-It's a decision-making gap.
+Every week there's a new "this changes everything." And somehow, every week, it actually does.
 
-The question isn't "do we have the right people?" It's "do our best people have the information they need to make the right calls?"
+What does your roadmap look like if this pace holds for another 12 months?`,
+    ];
+    return `${pick(storyOpeners)}\n\n${title}.\n\n${desc}\n\n${closers[day % closers.length]}\n\n${tags}`;
+  }
 
-80% of bad technical outcomes trace back to one under-informed decision made 6 months earlier.
-
-What decision from 6 months ago is your team living with right now?`,
-  ];
-
-  const pick = (arr) => arr[day % arr.length];
-  const hashtags = getHashtags(title, desc);
-
-  if (style === 'authority')   return `${pick(authorityHooks)}\n\n${title}\n\n${pick(authorityBodies)}\n\n${hashtags}`;
-  if (style === 'educational') return `${pick(educationalHooks)}\n\n${title}\n\n${pick(educationalBodies)}\n\n${hashtags}`;
-  if (style === 'opinion')     return `${pick(opinionHooks)}\n\n${title}\n\n${pick(opinionBodies)}\n\n${hashtags}`;
-
-  return `${title}\n\n${desc}\n\n${hashtags}`;
+  return `${title}\n\n${desc}\n\nThe ceiling keeps moving.\n\n${tags}`;
 }
 
 // ── POST TO LINKEDIN ──────────────────────────────────────────────────────────
