@@ -607,8 +607,8 @@ input:checked ~ .toggle-dot{transform:translateX(18px);background:var(--nova);bo
       <div class="ctrl-row">
         <span class="ctrl-lbl">Quality Threshold</span>
         <div style="display:flex;align-items:center;gap:7px">
-          <input type="range" min="0.1" max="0.9" step="0.05" value="0.9" id="thresh" oninput="(document.getElementById('thv') || {}).textContent =Math.round(parseFloat(this.value)*100)+'%'"/>
-          <div class="ctrl-val" id="thv">90%</div>
+          <input type="range" min="0.1" max="0.9" step="0.05" value="0.6" id="thresh" oninput="(document.getElementById('thv') || {}).textContent =Math.round(parseFloat(this.value)*100)+'%'"/>
+          <div class="ctrl-val" id="thv">60%</div>
         </div>
       </div>
       <div class="ctrl-row">
@@ -1195,14 +1195,10 @@ async function generateForArticle(idx){
   const container = document.getElementById('generatedPosts');
   if(!container) return;
 
-  // Get article from feed cards
-  const cards = document.querySelectorAll('.feed-card');
-  const card = cards[idx];
-  const titleEl = card?.querySelector('[data-title]') || card?.querySelector('div > div > div');
-  const title = card?.querySelector('.fc-title')?.textContent || 
-                card?.querySelector('div[style*="font-weight:600"]')?.textContent || 
-                `Article ${idx+1}`;
-  const desc = card?.querySelector('div[style*="color:#6888aa"]')?.textContent || '';
+  // Get article from stored feed (reliable)
+  const article = (window._currentFeed || [])[idx] || S.items[idx] || {};
+  const title   = article.title   || `Article ${idx+1}`;
+  const desc    = article.summary || article.description || '';
 
   const postText = await aiGeneratePost(title, desc) || makePost({title, summary:desc, feedKey: S.feedKey || 'tech'});
 
@@ -1265,6 +1261,7 @@ async function launchAutomation(){
       link:    item.link || '',
     }));
 
+    window._currentFeed = feed; // Store for generateForArticle
     (document.getElementById('sF') || {}).textContent = feed.length;
 
     log(`Running quality filter on ${feed.length} articles...`, 'info');
@@ -1320,6 +1317,7 @@ async function launchAutomation(){
 
   } catch(err){
     log(`Error: ${err.message}`, 'error');
+    log('Tip: Check internet connection or try a different RSS source', 'warn');
     console.error("launchAutomation error:", err);
   }
 
