@@ -452,6 +452,54 @@ input:checked ~ .toggle-dot{transform:translateX(18px);background:var(--nova);bo
   .hero{padding:30px 16px 24px}
   .wf-strip{padding:10px 16px}
 }
+
+/* ── PIPELINE ── */
+.pipe-box{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:16px 20px;margin:16px 20px 0}
+.pipe-hdr{font-family:'Syne',sans-serif;font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.pipe-track{display:flex;align-items:center;gap:0;margin-bottom:10px;overflow-x:auto}
+.pipe-node{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 16px;border-radius:10px;transition:all 0.2s;min-width:70px}
+.pipe-node.active .pipe-circ{background:rgba(0,200,255,0.15);border-color:rgba(0,200,255,0.5);color:var(--glow)}
+.pipe-node.done .pipe-circ{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3)}
+.pipe-circ{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.3s}
+.pipe-lbl{font-size:0.6rem;color:var(--muted);text-align:center}
+
+/* ── LOG ── */
+.log{font-family:'JetBrains Mono',monospace;font-size:0.68rem;line-height:1.8}
+.ll{padding:1px 0}
+.ll .ts{color:rgba(255,255,255,0.2);margin-right:6px}
+.ll .msg{color:#4a7088}
+.ll.success .msg{color:var(--nova)}
+.ll.error .msg{color:var(--rose)}
+.ll.warn .msg{color:var(--amber)}
+.ll.info .msg{color:#4a7088}
+
+/* ── TAB BAR ── */
+.tab-bar{display:flex;gap:4px;padding:12px 20px 0;flex-wrap:wrap}
+.tab-btn{padding:5px 14px;border-radius:8px;font-size:0.72rem;font-weight:600;border:1px solid rgba(255,255,255,0.06);color:var(--muted);background:none;cursor:pointer;transition:all 0.18s;font-family:'DM Sans',sans-serif}
+.tab-btn:hover{color:var(--text);background:var(--glass2)}
+.tab-btn.active{color:var(--glow);border-color:rgba(0,200,255,0.3);background:rgba(0,200,255,0.08)}
+
+/* ── FEED ITEM BUTTONS ── */
+.fi-icon{font-size:1rem;min-width:20px}
+.fi-name{font-size:0.75rem;font-weight:600;color:var(--text)}
+.fi-url{font-size:0.62rem;color:var(--muted)}
+.fi-live{font-size:0.55rem;font-weight:700;color:var(--nova);background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);padding:1px 6px;border-radius:10px;margin-left:auto}
+
+/* ── STYLE BUTTONS ROW ── */
+.style-row{display:flex;gap:6px}
+.sb-icon{display:block;font-size:1.2rem;margin-bottom:2px}
+.sb-name{display:block;font-size:0.72rem;font-weight:700;color:var(--text)}
+.sb-desc{display:block;font-size:0.6rem;color:var(--muted)}
+
+/* ── CTRL VAL ── */
+.ctrl-val{font-size:0.75rem;font-weight:700;color:var(--glow);min-width:36px;text-align:right}
+
+/* ── FEED LIST ── */
+.feed-list{padding:16px 20px;display:flex;flex-direction:column;gap:10px;min-height:200px}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center}
+.empty-icon{font-size:2.5rem;opacity:0.2;margin-bottom:14px;animation:float 3s ease-in-out infinite}
+.empty-t{font-family:'Syne',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.2);margin-bottom:6px;letter-spacing:0.06em}
+.empty-s{font-size:0.75rem;max-width:260px;opacity:0.5;line-height:1.6;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -756,10 +804,10 @@ input:checked ~ .toggle-dot{transform:translateX(18px);background:var(--nova);bo
 
     <!-- STATS -->
     <div class="stats">
-      <div class="stat" style="--ac:#00d4ff"><div class="stat-n" id="sF">0</div><div class="stat-l">Fetched</div></div>
-      <div class="stat" style="--ac:#00ff88"><div class="stat-n" id="sP">0</div><div class="stat-l">Passed Filter</div></div>
-      <div class="stat" style="--ac:#7b2fff"><div class="stat-n" id="sG">0</div><div class="stat-l">Posts Generated</div></div>
-      <div class="stat" style="--ac:#ff6b35"><div class="stat-n" id="sA">—</div><div class="stat-l">Avg Quality Score</div></div>
+      <div class="stat" style="--ac:#00d4ff"><div class="stat-num" id="sF">0</div><div class="stat-lbl">Fetched</div></div>
+      <div class="stat" style="--ac:#00ff88"><div class="stat-num" id="sP">0</div><div class="stat-lbl">Passed Filter</div></div>
+      <div class="stat" style="--ac:#7b2fff"><div class="stat-num" id="sG">0</div><div class="stat-lbl">Posts Generated</div></div>
+      <div class="stat" style="--ac:#ff6b35"><div class="stat-num" id="sA">—</div><div class="stat-lbl">Avg Quality Score</div></div>
     </div>
 
     <!-- PIPELINE -->
@@ -1633,13 +1681,37 @@ async function aiGeneratePost(title, desc){
 function shareOnLinkedIn(elId, btn){
   const el = document.getElementById(elId);
   if(!el){ alert("Post not found!"); return; }
-  const postText = el.textContent || el.innerText || "";
-  if(!postText.trim()){ alert("Post is empty!"); return; }
-  const url = "https://www.linkedin.com/sharing/share-offsite/?text=" + encodeURIComponent(postText.substring(0, 700));
-  const popup = window.open(url, "linkedin-share", "width=600,height=600,scrollbars=yes,resizable=yes");
+  const postText = (el.innerText || el.textContent || '').trim();
+  if(!postText){ alert("Post is empty!"); return; }
+  openLinkedInShare(postText, btn);
+}
+
+// Share using stored plain text (no char limit issues)
+function sharePostText(idx, btn){
+  const postText = (window._generatedPosts || {})[idx] || '';
+  if(!postText){ alert("Post not found!"); return; }
+  openLinkedInShare(postText, btn);
+}
+
+// Copy stored plain text
+async function copyPostText(idx, btn){
+  const postText = (window._generatedPosts || {})[idx] || '';
+  if(!postText){ alert("Post not found!"); return; }
+  try {
+    await navigator.clipboard.writeText(postText);
+    const orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    setTimeout(()=>btn.textContent = orig, 1600);
+  } catch { alert(postText); }
+}
+
+function openLinkedInShare(postText, btn){
+  // Use full post — no artificial char limit
+  const url = "https://www.linkedin.com/sharing/share-offsite/?text=" + encodeURIComponent(postText);
+  const popup = window.open(url, "linkedin-share", "width=620,height=620,scrollbars=yes,resizable=yes");
   if(!popup){
     navigator.clipboard.writeText(postText).then(()=>{
-      alert("Popup blocked!\n\nPost copied to clipboard.\nPaste on LinkedIn manually.");
+      alert("Popup blocked!\n\nPost copied to clipboard.\nOpen LinkedIn and paste manually.");
     });
     return;
   }
@@ -1662,14 +1734,20 @@ async function generateForArticle(idx){
   const desc     = article.summary || article.description || '';
   const postText = makePost({ title, summary: desc, feedKey: S.feedKey || 'tech' });
 
+  // Store for reliable copy/share
+  window._generatedPosts = window._generatedPosts || {};
+  window._generatedPosts[idx] = postText;
+
   const authorName = window._liName || 'Srashti Jain';
   const initials   = authorName.split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
   const div = document.createElement('div');
   div.className = 'post-card';
+  // Store plain text as data attribute for copy/share
+  div.dataset.postText = postText;
   div.innerHTML = `<div class="post-card-hdr"><div class="post-avatar">${initials}</div><div><div class="post-author-name">${authorName}</div><div class="post-author-meta">LinkedIn · Just now</div></div></div><div class="post-body" id="pb-${idx}">${postText.replace(/\n/g,'<br>')}</div>
     <div class="post-actions">
-      <button class="btn-copy" onclick="copyText('pb-${idx}',this)">📋 Copy</button>
-      <button class="btn-linkedin" onclick="shareOnLinkedIn('pb-${idx}',this)">📤 Share on LinkedIn</button>
+      <button class="btn-copy" onclick="copyPostText(${idx},this)">📋 Copy</button>
+      <button class="btn-linkedin" onclick="sharePostText(${idx},this)">📤 Share on LinkedIn</button>
     </div>`;
   container.appendChild(div);
   if(btn){ btn.textContent='✅ Done'; btn.disabled=false; }
@@ -1764,12 +1842,46 @@ async function launchAutomation(){
 }
 
 async function copyText(elId, btn){
-  const text = document.getElementById(elId)?.textContent || '';
+  const el = document.getElementById(elId);
+  // Get plain text — convert <br> back to newlines
+  const text = el ? el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g,'') : '';
   try {
     await navigator.clipboard.writeText(text);
     btn.textContent = '✅ Copied!';
     setTimeout(()=>btn.textContent='📋 Copy', 1600);
   } catch { alert(text); }
+}
+
+// Store generated posts for reliable copy/share
+window._generatedPosts = window._generatedPosts || {};
+
+async function copyPostText(idx, btn){
+  const text = window._generatedPosts[idx] || '';
+  if(!text){ btn.textContent='❌ No post'; return; }
+  try {
+    await navigator.clipboard.writeText(text);
+    btn.textContent = '✅ Copied!';
+    setTimeout(()=>btn.textContent='📋 Copy', 1600);
+  } catch { alert(text); }
+}
+
+function sharePostText(idx, btn){
+  const text = window._generatedPosts[idx] || '';
+  if(!text){ alert('Post not found!'); return; }
+  // LinkedIn supports up to 3000 chars
+  const url = "https://www.linkedin.com/sharing/share-offsite/?text=" + encodeURIComponent(text.substring(0, 3000));
+  const popup = window.open(url, "linkedin-share", "width=600,height=600,scrollbars=yes,resizable=yes");
+  if(!popup){
+    navigator.clipboard.writeText(text).then(()=>{
+      alert("Popup blocked!\n\nPost copied to clipboard.\nPaste on LinkedIn manually.");
+    });
+    return;
+  }
+  if(btn){
+    const orig = btn.innerHTML;
+    btn.innerHTML = "✅ Opened!";
+    setTimeout(()=>{ btn.innerHTML = orig; }, 2500);
+  }
 }
 
 // ── LINKEDIN ──────────────────────────────────────────────────────────────────
