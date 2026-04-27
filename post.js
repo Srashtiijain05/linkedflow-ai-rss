@@ -9,10 +9,10 @@ const { fetchAllFeeds } = require('./rss');
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const LI_TOKEN      = process.env.LI_TOKEN;
-const LI_URN        = process.env.LI_URN   || 'urn:li:person:1772788136593';
+const LI_URN        = process.env.LI_URN || 'urn:li:person:1772788136593';
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
-// ── SYSTEM PROMPT (Claude ko ek baar deta hai role) ───────────────────────────
+// ── SYSTEM PROMPT ─────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are a professional LinkedIn content creator known for writing posts that feel human, specific, and scroll-stopping.
 
 Your job is a 3-step pipeline:
@@ -42,15 +42,19 @@ Using what you extracted, write a LinkedIn post:
 - Do NOT start with "I"
 - Do NOT mention the source or article title in the body
 
-Return ONLY the final post text. No preamble. No "Here is the post:". Just the post.`;
+Return ONLY the final post text. No preamble. No label. Just the post.`;
 
 // ── GENERATE POST VIA CLAUDE API ──────────────────────────────────────────────
 async function generatePost(article) {
   if (!ANTHROPIC_KEY) {
-    // Fallback: basic post without Claude
-    console.log('⚠️  ANTHROPIC_API_KEY not set — using basic post format.');
+    console.log('⚠️  ANTHROPIC_API_KEY not set in .env — Claude API disabled.');
+    console.log('    Add ANTHROPIC_API_KEY to your .env file for AI-generated posts.');
     return `${article.title}\n\n${article.fullContent.slice(0, 500)}\n\n#AI #Tech #Innovation`;
   }
+
+  // Log how much content we're sending
+  const contentLen = (article.fullContent || '').length;
+  console.log(`   📄 Content length sent to Claude: ${contentLen} chars`);
 
   const userPrompt = `Here is the article to process:
 
@@ -61,13 +65,13 @@ Published: ${article.pubDate}
 Full Article Content:
 ${article.fullContent}
 
-Follow the 3-step pipeline. If score < 6, say SKIP. Otherwise return only the final LinkedIn post.`;
+Follow the 3-step pipeline. If score < 6, respond with SKIP. Otherwise return only the final LinkedIn post.`;
 
   try {
     const res = await axios.post(
       'https://api.anthropic.com/v1/messages',
       {
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',   // ✅ correct model string
         max_tokens: 700,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
@@ -84,8 +88,10 @@ Follow the 3-step pipeline. If score < 6, say SKIP. Otherwise return only the fi
 
     const text = res.data.content[0].text.trim();
     return text;
+
   } catch (err) {
-    throw new Error(`Claude API failed: ${err.response?.data?.error?.message || err.message}`);
+    const detail = err.response?.data?.error?.message || err.message;
+    throw new Error(`Claude API failed: ${detail}`);
   }
 }
 
@@ -94,10 +100,11 @@ function postToLinkedIn(text) {
   return new Promise((resolve, reject) => {
     if (!LI_TOKEN) {
       console.log('\n⚠️  LI_TOKEN not set — post printed above but NOT sent to LinkedIn.');
-      console.log('    Add LI_TOKEN to your .env file to enable posting.\n');
+      console.log('    Add LI_TOKEN to your .env to enable live posting.\n');
       resolve({ skipped: true });
       return;
     }
+
     const body = JSON.stringify({
       author: LI_URN,
       lifecycleState: 'PUBLISHED',
@@ -109,6 +116,7 @@ function postToLinkedIn(text) {
       },
       visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },
     });
+
     const options = {
       hostname: 'api.linkedin.com',
       path:     '/v2/ugcPosts',
@@ -120,6 +128,7 @@ function postToLinkedIn(text) {
         'Content-Length':            Buffer.byteLength(body),
       },
     };
+
     const req = https.request(options, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
@@ -139,6 +148,12 @@ async function main() {
   console.log('🚀 LinkedIn Auto Post starting...');
   console.log(`📅 Date: ${new Date().toISOString()}`);
 
+  // Env check
+  console.log('\n🔑 Config check:');
+  console.log(`   ANTHROPIC_API_KEY : ${ANTHROPIC_KEY ? '✅ set' : '❌ MISSING — add to .env'}`);
+  console.log(`   LI_TOKEN          : ${LI_TOKEN      ? '✅ set' : '⚠️  not set — will print only'}`);
+  console.log(`   LI_URN            : ${LI_URN}`);
+
   // 1. Fetch real articles from RSS
   console.log('\n📡 Fetching articles from RSS feeds...');
   let feeds = [];
@@ -150,53 +165,52 @@ async function main() {
   }
 
   if (!feeds.length) {
-    console.error('❌ No articles fetched. Check rss.js.');
+    console.error('❌ No articles fetched. Check feeds in rss.js.');
     process.exit(1);
   }
   console.log(`✅ ${feeds.length} articles fetched.\n`);
 
-  // 2. Try articles one by one until Claude approves one (skips low quality)
-  let postText = null;
+  // 2. Try articles one by one until one passes Claude's filter
+  let postText    = null;
   let usedArticle = null;
 
-  // Rotate starting index by day+hour so we don't always pick same article
-  const dayOfWeek  = new Date().getDay();
-  const hourOfDay  = new Date().getHours();
-  const startIdx   = (dayOfWeek * 2 + (hourOfDay > 12 ? 1 : 0)) % feeds.length;
+  const dayOfWeek = new Date().getDay();
+  const hourOfDay = new Date().getHours();
+  const startIdx  = (dayOfWeek * 2 + (hourOfDay > 12 ? 1 : 0)) % feeds.length;
 
   for (let i = 0; i < feeds.length; i++) {
     const idx     = (startIdx + i) % feeds.length;
     const article = feeds[idx];
 
     console.log(`\n🔍 Trying [${i + 1}/${feeds.length}]: ${article.title.slice(0, 70)}`);
-    console.log(`   Source: ${article.feedLabel}`);
+    console.log(`   Source : ${article.feedLabel}`);
 
     try {
       const result = await generatePost(article);
 
       if (result.trim().toUpperCase() === 'SKIP') {
-        console.log('   ⏭️  Claude scored this below threshold. Trying next...');
+        console.log('   ⏭️  Claude: low quality — skipping.');
         continue;
       }
 
-      // Got a good post
       postText    = result;
       usedArticle = article;
       break;
+
     } catch (err) {
-      console.error(`   ✗ Error: ${err.message}`);
+      console.error(`   ✗ ${err.message}`);
       continue;
     }
   }
 
   if (!postText) {
-    console.error('\n❌ No articles passed quality filter. Try again later or add more feeds.');
+    console.error('\n❌ No articles passed quality filter. Try running again or add more RSS feeds.');
     process.exit(1);
   }
 
-  // 3. Show preview
-  console.log(`\n✅ Post approved from: ${usedArticle.feedLabel}`);
-  console.log('\n📝 FINAL POST PREVIEW:');
+  // 3. Preview
+  console.log(`\n✅ Post generated from: ${usedArticle.feedLabel}`);
+  console.log('\n📝 FINAL POST:');
   console.log('═'.repeat(60));
   console.log(postText);
   console.log('═'.repeat(60));
@@ -208,7 +222,7 @@ async function main() {
       console.log('\n✅ Posted to LinkedIn successfully!');
     }
   } catch (err) {
-    console.error('\n❌ Failed to post to LinkedIn:', err.message);
+    console.error('\n❌ LinkedIn post failed:', err.message);
     process.exit(1);
   }
 }
