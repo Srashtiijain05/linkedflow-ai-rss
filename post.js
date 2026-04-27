@@ -1,16 +1,12 @@
-// post.js — LinkedIn Auto Post (Claude API powered)
-// node post.js
-// npm install rss-parser axios cheerio dotenv
-
+// post.js — LinkedIn Auto Post (Gemini API powered)
 require('dotenv').config();
 const https   = require('https');
 const axios   = require('axios');
 const { fetchAllFeeds } = require('./rss');
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const LI_TOKEN      = process.env.LI_TOKEN;
-const LI_URN        = process.env.LINKEDIN_AUTHOR || 'urn:li:member:1772788136593';
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+const LI_TOKEN = process.env.LI_TOKEN;
+const LI_URN   = process.env.LI_URN || 'urn:li:person:1772788136593';
 
 // ── SYSTEM PROMPT ─────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are a professional LinkedIn content creator known for writing posts that feel human, specific, and scroll-stopping.
@@ -32,8 +28,8 @@ Pull out from the article:
 
 STEP 3 — WRITE THE POST
 Using what you extracted, write a LinkedIn post:
-- Hook: First line must be specific and surprising — NOT "AI is changing everything"
-- Body: Use the ACTUAL facts/examples from the article — no vague summaries
+- Hook: First line must be specific and surprising
+- Body: Use the ACTUAL facts/examples from the article
 - Structure: Hook → Key insight → Your angle → Takeaway
 - Short paragraphs, 2-3 lines max
 - End with ONE simple question as CTA
@@ -44,19 +40,18 @@ Using what you extracted, write a LinkedIn post:
 
 Return ONLY the final post text. No preamble. No label. Just the post.`;
 
-// ── GENERATE POST VIA CLAUDE API ──────────────────────────────────────────────
+// ── GENERATE POST VIA GEMINI API ──────────────────────────────────────────────
 async function generatePost(article) {
-  if (!ANTHROPIC_KEY) {
-    console.log('⚠️  ANTHROPIC_API_KEY not set in .env — Claude API disabled.');
-    console.log('    Add ANTHROPIC_API_KEY to your .env file for AI-generated posts.');
+  if (!process.env.GEMINI_API_KEY) {
+    console.log('⚠️  GEMINI_API_KEY not set in .env');
     return `${article.title}\n\n${article.fullContent.slice(0, 500)}\n\n#AI #Tech #Innovation`;
   }
 
-  const contentLen = (article.fullContent || '').length;
-  console.log(`   📄 Content length sent to Claude: ${contentLen} chars`);
+  const { GoogleGenerativeAI } = require('@google/generative-ai');
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-  const userPrompt = `Here is the article to process:
-
+  const prompt = SYSTEM_PROMPT + `\n\nArticle to process:
 Title: ${article.title}
 Source: ${article.feedLabel}
 Published: ${article.pubDate}
@@ -67,30 +62,11 @@ ${article.fullContent}
 Follow the 3-step pipeline. If score < 6, respond with SKIP. Otherwise return only the final LinkedIn post.`;
 
   try {
-    const res = await axios.post(
-      'https://api.anthropic.com/v1/messages',
-      {
-        model: 'claude-sonnet-4-6',
-        max_tokens: 700,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userPrompt }],
-      },
-      {
-        headers: {
-          'x-api-key': ANTHROPIC_KEY,
-          'anthropic-version': '2023-06-01',
-          'Content-Type': 'application/json',
-        },
-        timeout: 30000,
-      }
-    );
-
-    const text = res.data.content[0].text.trim();
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
     return text;
-
   } catch (err) {
-    const detail = err.response?.data?.error?.message || err.message;
-    throw new Error(`Claude API failed: ${detail}`);
+    throw new Error(`Gemini API failed: ${err.message}`);
   }
 }
 
@@ -99,7 +75,6 @@ function postToLinkedIn(text) {
   return new Promise((resolve, reject) => {
     if (!LI_TOKEN) {
       console.log('\n⚠️  LI_TOKEN not set — post printed above but NOT sent to LinkedIn.');
-      console.log('    Add LI_TOKEN to your .env to enable live posting.\n');
       resolve({ skipped: true });
       return;
     }
@@ -132,7 +107,7 @@ function postToLinkedIn(text) {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
-        if (res.statusCode === 201) resolve({ success: true, status: res.statusCode });
+        if (res.statusCode === 201) resolve({ success: true });
         else reject(new Error(`LinkedIn API error ${res.statusCode}: ${data}`));
       });
     });
@@ -148,9 +123,9 @@ async function main() {
   console.log(`📅 Date: ${new Date().toISOString()}`);
 
   console.log('\n🔑 Config check:');
-  console.log(`   ANTHROPIC_API_KEY : ${ANTHROPIC_KEY ? '✅ set' : '❌ MISSING — add to .env'}`);
-  console.log(`   LI_TOKEN          : ${LI_TOKEN      ? '✅ set' : '⚠️  not set — will print only'}`);
-  console.log(`   LI_URN            : ${LI_URN}`);
+  console.log(`   GEMINI_API_KEY : ${process.env.GEMINI_API_KEY ? '✅ set' : '❌ MISSING'}`);
+  console.log(`   LI_TOKEN       : ${LI_TOKEN ? '✅ set' : '⚠️  not set'}`);
+  console.log(`   LI_URN         : ${LI_URN}`);
 
   console.log('\n📡 Fetching articles from RSS feeds...');
   let feeds = [];
@@ -162,7 +137,7 @@ async function main() {
   }
 
   if (!feeds.length) {
-    console.error('❌ No articles fetched. Check feeds in rss.js.');
+    console.error('❌ No articles fetched.');
     process.exit(1);
   }
   console.log(`✅ ${feeds.length} articles fetched.\n`);
@@ -183,16 +158,13 @@ async function main() {
 
     try {
       const result = await generatePost(article);
-
       if (result.trim().toUpperCase() === 'SKIP') {
-        console.log('   ⏭️  Claude: low quality — skipping.');
+        console.log('   ⏭️  Low quality — skipping.');
         continue;
       }
-
       postText    = result;
       usedArticle = article;
       break;
-
     } catch (err) {
       console.error(`   ✗ ${err.message}`);
       continue;
@@ -200,7 +172,7 @@ async function main() {
   }
 
   if (!postText) {
-    console.error('\n❌ No articles passed quality filter. Try running again or add more RSS feeds.');
+    console.error('\n❌ No articles passed quality filter.');
     process.exit(1);
   }
 
