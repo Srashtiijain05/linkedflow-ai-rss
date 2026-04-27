@@ -9,7 +9,7 @@ const { fetchAllFeeds } = require('./rss');
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const LI_TOKEN      = process.env.LI_TOKEN;
-const LI_URN        = process.env.LI_URN || 'urn:li:person:1772788136593';
+const LI_URN        = process.env.LINKEDIN_AUTHOR || 'urn:li:member:1772788136593';
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
 // ── SYSTEM PROMPT ─────────────────────────────────────────────────────────────
@@ -52,7 +52,6 @@ async function generatePost(article) {
     return `${article.title}\n\n${article.fullContent.slice(0, 500)}\n\n#AI #Tech #Innovation`;
   }
 
-  // Log how much content we're sending
   const contentLen = (article.fullContent || '').length;
   console.log(`   📄 Content length sent to Claude: ${contentLen} chars`);
 
@@ -71,7 +70,7 @@ Follow the 3-step pipeline. If score < 6, respond with SKIP. Otherwise return on
     const res = await axios.post(
       'https://api.anthropic.com/v1/messages',
       {
-        model: 'claude-sonnet-4-6',   // ✅ correct model string
+        model: 'claude-sonnet-4-6',
         max_tokens: 700,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],
@@ -148,17 +147,15 @@ async function main() {
   console.log('🚀 LinkedIn Auto Post starting...');
   console.log(`📅 Date: ${new Date().toISOString()}`);
 
-  // Env check
   console.log('\n🔑 Config check:');
   console.log(`   ANTHROPIC_API_KEY : ${ANTHROPIC_KEY ? '✅ set' : '❌ MISSING — add to .env'}`);
   console.log(`   LI_TOKEN          : ${LI_TOKEN      ? '✅ set' : '⚠️  not set — will print only'}`);
   console.log(`   LI_URN            : ${LI_URN}`);
 
-  // 1. Fetch real articles from RSS
   console.log('\n📡 Fetching articles from RSS feeds...');
   let feeds = [];
   try {
-    feeds = await fetchAllFeeds(2, true); // 2 per feed, full content ON
+    feeds = await fetchAllFeeds(2, true);
   } catch (err) {
     console.error('❌ RSS fetch failed:', err.message);
     process.exit(1);
@@ -170,7 +167,6 @@ async function main() {
   }
   console.log(`✅ ${feeds.length} articles fetched.\n`);
 
-  // 2. Try articles one by one until one passes Claude's filter
   let postText    = null;
   let usedArticle = null;
 
@@ -208,14 +204,12 @@ async function main() {
     process.exit(1);
   }
 
-  // 3. Preview
   console.log(`\n✅ Post generated from: ${usedArticle.feedLabel}`);
   console.log('\n📝 FINAL POST:');
   console.log('═'.repeat(60));
   console.log(postText);
   console.log('═'.repeat(60));
 
-  // 4. Post to LinkedIn
   try {
     const result = await postToLinkedIn(postText);
     if (!result.skipped) {
