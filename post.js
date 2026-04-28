@@ -1,7 +1,7 @@
-// post.js — LinkedIn Auto Post (Gemini API powered)
+// post.js — LinkedIn Auto Post (Groq API powered)
 require('dotenv').config();
-const https   = require('https');
-const axios   = require('axios');
+const https = require('https');
+const axios = require('axios');
 const { fetchAllFeeds } = require('./rss');
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
@@ -40,16 +40,15 @@ Using what you extracted, write a LinkedIn post:
 
 Return ONLY the final post text. No preamble. No label. Just the post.`;
 
-// ── GENERATE POST VIA GEMINI API ──────────────────────────────────────────────
+// ── GENERATE POST VIA GROQ API ────────────────────────────────────────────────
 async function generatePost(article) {
-  if (!process.env.GEMINI_API_KEY) {
-    console.log('⚠️  GEMINI_API_KEY not set in .env');
+  if (!process.env.GROQ_API_KEY) {
+    console.log('⚠️  GROQ_API_KEY not set in .env');
     return `${article.title}\n\n${article.fullContent.slice(0, 500)}\n\n#AI #Tech #Innovation`;
   }
 
-  const { GoogleGenerativeAI } = require('@google/generative-ai');
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const Groq = require('groq-sdk');
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
   const prompt = SYSTEM_PROMPT + `\n\nArticle to process:
 Title: ${article.title}
@@ -62,11 +61,15 @@ ${article.fullContent}
 Follow the 3-step pipeline. If score < 6, respond with SKIP. Otherwise return only the final LinkedIn post.`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text().trim();
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 700,
+    });
+    const text = completion.choices[0].message.content.trim();
     return text;
   } catch (err) {
-    throw new Error(`Gemini API failed: ${err.message}`);
+    throw new Error(`Groq API failed: ${err.message}`);
   }
 }
 
@@ -123,9 +126,9 @@ async function main() {
   console.log(`📅 Date: ${new Date().toISOString()}`);
 
   console.log('\n🔑 Config check:');
-  console.log(`   GEMINI_API_KEY : ${process.env.GEMINI_API_KEY ? '✅ set' : '❌ MISSING'}`);
-  console.log(`   LI_TOKEN       : ${LI_TOKEN ? '✅ set' : '⚠️  not set'}`);
-  console.log(`   LI_URN         : ${LI_URN}`);
+  console.log(`   GROQ_API_KEY : ${process.env.GROQ_API_KEY ? '✅ set' : '❌ MISSING'}`);
+  console.log(`   LI_TOKEN     : ${LI_TOKEN ? '✅ set' : '⚠️  not set'}`);
+  console.log(`   LI_URN       : ${LI_URN}`);
 
   console.log('\n📡 Fetching articles from RSS feeds...');
   let feeds = [];
